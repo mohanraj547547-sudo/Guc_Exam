@@ -1,0 +1,2083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invigilator Diary — Garden City University</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  @page diary-page        { size: A4 portrait;  margin: 12mm; }
+  @page absentees-page    { size: A4 landscape; margin: 12mm; }
+  @page room-allot-page   { size: A4 portrait;  margin: 12mm; }
+  @page access-keys-page  { size: A4 portrait;  margin: 12mm; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #eef2f7; color: #0f172a; -webkit-font-smoothing: antialiased; }
+  .hidden { display: none !important; }
+  .login-screen { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; background: radial-gradient(900px 500px at 15% -10%, #312e81 0%, transparent 60%), radial-gradient(800px 500px at 110% 110%, #0e7490 0%, transparent 55%), linear-gradient(150deg, #0f172a 0%, #1e1b4b 60%, #0b1220 100%); padding: 20px; }
+  .login-card { width: 100%; max-width: 440px; background: rgba(255,255,255,.98); border-radius: 18px; padding: 32px 30px 26px; box-shadow: 0 30px 70px rgba(2,6,23,.55); border: 1px solid rgba(255,255,255,.5); animation: pop .35s ease-out; }
+  @keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+  .login-logoWrap { display: flex; justify-content: center; align-items: center; margin-bottom: 16px; min-height: 90px; }
+  .login-logoWrap img { max-height: 100px; max-width: 100%; width: auto; height: auto; object-fit: contain; }
+  .login-card h1 { margin: 0 0 4px; text-align: center; font-size: 20px; font-weight: 800; color: #0f172a; }
+  .login-card .sub { margin: 0 0 6px; text-align: center; font-size: 12.5px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .login-card .orgName { margin: 0 0 4px; text-align: center; font-size: 11.5px; color: #4f46e5; font-weight: 700; }
+  .login-card .orgAddr { margin: 0 0 20px; text-align: center; font-size: 10.5px; color: #64748b; font-weight: 600; line-height: 1.45; }
+  .login-card label { display: flex; flex-direction: column; gap: 6px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 14px; }
+  .login-card select { width: 100%; padding: 11px 13px; font-size: 14px; font-family: inherit; border: 1.5px solid #cbd5e1; border-radius: 10px; background: #f8fafc; color: #0f172a; font-weight: 500; transition: .15s; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='3'><polyline points='6 9 12 15 18 9'/></svg>"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+  .login-card select:focus { outline: none; border-color: #4f46e5; background: #fff; box-shadow: 0 0 0 4px rgba(79,70,229,.14); }
+  .login-btn { width: 100%; margin-top: 6px; padding: 12px; border: 0; border-radius: 10px; cursor: pointer; background: linear-gradient(135deg, #4f46e5, #4338ca); color: #fff; font-size: 14px; font-weight: 700; font-family: inherit; transition: .18s; box-shadow: 0 6px 16px rgba(79,70,229,.35); }
+  .login-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(79,70,229,.45); }
+  .login-err { margin-top: 14px; padding: 9px 12px; border-radius: 9px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 12.5px; font-weight: 600; text-align: center; }
+  .login-foot { margin: 18px 0 0; text-align: center; font-size: 11px; color: #94a3b8; font-weight: 600; }
+  .topbar { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: #0f172a; color: #fff; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 10px rgba(15,23,42,.25); gap: 10px; }
+  .brand { font-weight: 700; display: flex; align-items: center; gap: 10px; font-size: 14.5px; min-width: 0; flex: 1; }
+  .brandLogoBox { width: 46px; height: 46px; flex: 0 0 46px; border-radius: 10px; background: #fff; display: grid; place-items: center; overflow: hidden; border: 1px solid rgba(255,255,255,.2); padding: 3px; }
+  .brandLogoBox img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .brandText { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+  .brandText b { font-size: 13.5px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brandText small { font-size: 10.5px; font-weight: 600; opacity: .55; letter-spacing: .4px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tabs { display: flex; background: rgba(255,255,255,.08); border-radius: 10px; padding: 3px; gap: 3px; border: 1px solid rgba(255,255,255,.12); }
+  .tab { padding: 6px 14px; border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; color: #cbd5e1; border: 0; background: transparent; font-family: inherit; display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: .15s; }
+  .tab:hover { background: rgba(255,255,255,.08); color: #fff; }
+  .tab.active { background: #4f46e5; color: #fff; box-shadow: 0 2px 8px rgba(79,70,229,.3); }
+  .topActions { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
+  .userChip { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 12px; font-weight: 600; color: #cbd5e1; max-width: 260px; }
+  .userChip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .userChip .avatar { width: 24px; height: 24px; border-radius: 50%; flex: 0 0 24px; display: grid; place-items: center; font-size: 11px; font-weight: 800; background: linear-gradient(135deg, #4f46e5, #0ea5e9); color: #fff; }
+  .btn { border: 1px solid transparent; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; transition: .15s; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
+  .btn.primary { background: #4f46e5; color: #fff; }
+  .btn.primary:hover { background: #4338ca; }
+  .btn.ghost { background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.22); }
+  .btn.ghost:hover { background: rgba(255,255,255,.2); }
+  .btn.subtle { background: #fff; color: #334155; border-color: #cbd5e1; }
+  .btn.subtle:hover { background: #f1f5f9; }
+  .btn.danger { background: rgba(239,68,68,.15); color: #fecaca; border-color: rgba(239,68,68,.35); }
+  .btn.danger:hover { background: rgba(239,68,68,.3); }
+  .btn.mini { padding: 4px 9px; font-size: 11px; font-weight: 700; border-radius: 6px; }
+  .btn.folder { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border-color: #d97706; }
+  .btn.folder:hover { background: linear-gradient(135deg, #d97706, #b45309); }
+  .appRoot { height: 100vh; display: flex; flex-direction: column; }
+  .app { display: grid; grid-template-columns: 480px 1fr; flex: 1; min-height: 0; }
+  .editor { overflow-y: auto; padding: 14px; background: #f8fafc; border-right: 1px solid #dbe3ec; position: relative; }
+  .previewWrap { overflow: auto; background: #e2e8f0; }
+  #preview { padding: 26px; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+  .viewModeBar { display: flex; gap: 4px; margin-bottom: 12px; background: #fff; border: 1px solid #dbe3ec; border-radius: 10px; padding: 4px; box-shadow: 0 1px 3px rgba(15,23,42,.05); }
+  .viewModeBtn { flex: 1; border: 0; padding: 8px 12px; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; background: transparent; color: #64748b; transition: .15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .viewModeBtn:hover { background: #f1f5f9; color: #334155; }
+  .viewModeBtn.active { background: linear-gradient(135deg, #4f46e5, #4338ca); color: #fff; box-shadow: 0 2px 8px rgba(79,70,229,.3); }
+  .dashboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+  .statCard { background: #fff; border: 1px solid #dbe3ec; border-radius: 10px; padding: 10px 8px; text-align: center; box-shadow: 0 1px 3px rgba(15,23,42,.05); position: relative; overflow: hidden; }
+  .statCard::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .statCard.s1::before { background: linear-gradient(90deg, #4f46e5, #6366f1); }
+  .statCard.s2::before { background: linear-gradient(90deg, #0ea5e9, #06b6d4); }
+  .statCard.s3::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+  .statCard.s4::before { background: linear-gradient(90deg, #dc2626, #ef4444); }
+  .statCard .n { font-size: 20px; font-weight: 800; line-height: 1.1; color: #0f172a; }
+  .statCard .l { font-size: 9.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .4px; margin-top: 3px; }
+  .compactList { display: flex; flex-direction: column; gap: 8px; }
+  .compactCard { background: #fff; border: 1px solid #dbe3ec; border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: all .15s; position: relative; box-shadow: 0 1px 3px rgba(15,23,42,.05); border-left: 4px solid #4f46e5; flex: 1; min-width: 0; }
+  .compactCard:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(15,23,42,.12); border-color: #a5b4fc; }
+  .compactCard.over { border-left-color: #dc2626; background: linear-gradient(90deg, #fef2f2 0%, #fff 40%); }
+  .compactCard.conflict { border-left-color: #f59e0b; background: linear-gradient(90deg, #fffbeb 0%, #fff 40%); }
+  .compactCard.ok { border-left-color: #16a34a; }
+  .compactCard .ccTop { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+  .compactCard .ccNum { background: linear-gradient(135deg, #4f46e5, #4338ca); color: #fff; width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: 11px; font-weight: 800; flex: 0 0 22px; }
+  .compactCard.over .ccNum { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+  .compactCard.conflict .ccNum { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .compactCard .ccTitle { flex: 1; min-width: 0; }
+  .compactCard .ccCourse { font-size: 13px; font-weight: 700; color: #0f172a; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .compactCard .ccSubtitle { font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .compactCard .ccBadges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+  .compactCard .ccBadge { font-size: 9.5px; font-weight: 800; padding: 3px 7px; border-radius: 5px; letter-spacing: .3px; text-transform: uppercase; }
+  .compactCard .ccBadge.room { background: #eef2ff; color: #4338ca; }
+  .compactCard .ccBadge.date { background: #f0fdfa; color: #0f766e; }
+  .compactCard .ccBadge.time { background: #fef3c7; color: #92400e; }
+  .compactCard .ccBadge.stu { background: #f0fdf4; color: #15803d; }
+  .compactCard .ccBadge.over { background: #fef2f2; color: #dc2626; }
+  .compactCard .ccBadge.conflict { background: #fef3c7; color: #92400e; }
+  .compactCard .ccBadge.warn { background: #fffbeb; color: #92400e; }
+  .compactCard .ccActions { display: flex; gap: 4px; flex: 0 0 auto; }
+  .compactCard .ccActions button { border: 1px solid #dbe3ec; background: #fff; border-radius: 6px; width: 24px; height: 24px; cursor: pointer; font-size: 11px; color: #475569; line-height: 1; padding: 0; display: grid; place-items: center; }
+  .compactCard .ccActions button:hover { background: #eef2ff; border-color: #c7d2fe; color: #4f46e5; }
+  .compactCard .ccActions button.del:hover { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
+  .examImportBar { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; padding: 10px; background: linear-gradient(135deg, #eef2ff 0%, #f0fdfa 100%); border: 1px solid #c7d2fe; border-radius: 10px; box-shadow: 0 1px 3px rgba(79,70,229,.08); }
+  .examImportBar .row { display: flex; gap: 6px; }
+  .examImportBar .ibtn { flex: 1; border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 9px 8px; font-size: 12px; font-weight: 700; cursor: pointer; color: #334155; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 5px; transition: .15s; white-space: nowrap; }
+  .examImportBar .ibtn:hover { background: #fff; border-color: #a5b4fc; color: #4338ca; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(79,70,229,.15); }
+  .examImportBar .ibtn.primary { background: linear-gradient(135deg, #4f46e5, #4338ca); color: #fff; border-color: #4338ca; }
+  .examImportBar .ibtn.primary:hover { background: linear-gradient(135deg, #4338ca, #3730a3); box-shadow: 0 5px 12px rgba(79,70,229,.35); }
+  .slotTableWrap { background: #fff; border: 1px solid #dbe3ec; border-radius: 10px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(15,23,42,.05); }
+  .slotTableHeader { padding: 10px 12px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: .5px; background: #f8fafc; border-bottom: 1px solid #dbe3ec; }
+  .slotTable { width: 100%; border-collapse: collapse; font-size: 12px; font-family: inherit; text-align: left; }
+  .slotTable th, .slotTable td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; }
+  .slotTable th { font-weight: 800; color: #475569; font-size: 10.5px; text-transform: uppercase; background: #f1f5f9; }
+  .slotTable tbody tr { cursor: pointer; transition: .15s; }
+  .slotTable tbody tr:hover { background: #f8fafc; }
+  .slotTable tbody tr.active-slot-row { background: #eef2ff; font-weight: 700; color: #4338ca; }
+  .slotTable tbody tr.active-slot-row td { border-bottom-color: #c7d2fe; }
+  .slotTable tbody tr:last-child td { border-bottom: 0; }
+  .card { background: #fff; border: 1px solid #dbe3ec; border-radius: 12px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(15,23,42,.06); }
+  .card.exam.dragging { opacity: .5; }
+  .card.exam.dropTarget { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.2); }
+  .card.exam.overCapacity { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,.15); }
+  .card-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f1f5f9; border-bottom: 1px solid #dbe3ec; font-size: 13px; font-weight: 700; color: #334155; cursor: pointer; user-select: none; }
+  .card-head:hover { background: #e8eef5; }
+  .card.exam.overCapacity .card-head { background: #fef2f2; border-bottom-color: #fecaca; }
+  .card-head .badge { background: #4f46e5; color: #fff; min-width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; font-size: 11px; padding: 0 5px; }
+  .card.exam.overCapacity .card-head .badge { background: #dc2626; }
+  .card-head .dragHandle { cursor: grab; color: #94a3b8; font-size: 14px; padding: 2px 4px; }
+  .card-head .dragHandle:active { cursor: grabbing; }
+  .cardTitle { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: #475569; }
+  .cardTitle .warnBadge { background: #fbbf24; color: #78350f; padding: 1px 6px; border-radius: 5px; font-size: 10px; font-weight: 800; margin-left: 6px; vertical-align: middle; }
+  .cardTitle .overBadge { background: #dc2626; color: #fff; padding: 1px 6px; border-radius: 5px; font-size: 10px; font-weight: 800; margin-left: 6px; vertical-align: middle; }
+  .chev { display: inline-block; width: 18px; text-align: center; color: #64748b; font-size: 11px; }
+  .btns { display: flex; gap: 4px; }
+  .btns button { border: 1px solid #dbe3ec; background: #fff; border-radius: 6px; width: 26px; height: 26px; cursor: pointer; font-size: 12px; color: #475569; line-height: 1; padding: 0; }
+  .btns button:hover { background: #eef2ff; border-color: #c7d2fe; color: #4f46e5; }
+  .card-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .card-body.hidden { display: none; }
+  .editor label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .4px; }
+  .editor input:not([type="checkbox"]):not([type="file"]), .editor textarea, .editor select { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-family: inherit; color: #0f172a; background: #fff; font-weight: 400; }
+  .editor select.roomSelect { background-color: #f0fdf4; border-color: #86efac; color: #166534; font-weight: 600; }
+  .editor select.roomSelect:focus { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.2); }
+  .editor select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='3'><polyline points='6 9 12 15 18 9'/></svg>"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+  .editor input:focus, .editor textarea:focus, .editor select:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
+  .editor input[type="date"] { cursor: pointer; color-scheme: light; }
+  .editor textarea { resize: vertical; font-family: "Times New Roman", Times, Georgia, serif; font-size: 13px; line-height: 1.55; }
+  .editor input[type="file"] { font-size: 11.5px; padding: 6px 8px; border: 1px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; width: 100%; cursor: pointer; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .full { grid-column: 1 / -1; }
+  .hint { font-size: 11.5px; color: #0f766e; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 6px 9px; border-radius: 7px; font-weight: 600; }
+  .hint.info { color: #1e40af; background: #eff6ff; border-color: #bfdbfe; }
+  .hint.warn { color: #92400e; background: #fffbeb; border-color: #fde68a; }
+  .rowBtns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .empty { color: #64748b; font-size: 14px; padding: 40px; }
+  .warnBlock { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 8px 10px; font-size: 12px; color: #92400e; font-weight: 600; display: flex; flex-direction: column; gap: 4px; }
+  .warnBlock .wt { font-weight: 800; letter-spacing: .3px; display: flex; align-items: center; gap: 6px; }
+  .warnBlock ul { margin: 0; padding-left: 20px; font-weight: 600; }
+  .warnBlock li { line-height: 1.5; }
+  .timeFieldWrap { display: flex; flex-direction: column; gap: 4px; }
+  .timeLabelRow { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .timeLabelRow .lbl { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .4px; }
+  .manualInput { width: 100%; padding: 9px 11px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-family: inherit; text-align: center; letter-spacing: .3px; background: #fff; color: #0f172a; }
+  .manualInput:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
+  .manualInput::placeholder { color: #94a3b8; font-size: 12px; letter-spacing: 0; }
+  .examSettings { display: grid; grid-template-columns: 80px 80px 1fr 80px; gap: 6px; padding: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 2px; align-items: end; }
+  .examSettings .examSettingsItem { display: flex; flex-direction: column; gap: 3px; }
+  .examSettings label { font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: .3px; margin: 0; }
+  .examSettings input { padding: 5px 8px !important; font-size: 12px !important; border-radius: 6px !important; }
+  .roomInfo { display: flex; gap: 8px; flex-wrap: wrap; font-size: 11px; font-weight: 700; color: #0f766e; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 6px 9px; border-radius: 7px; margin-top: 2px; line-height: 1.5; }
+  .roomInfo.over { color: #991b1b; background: #fef2f2; border-color: #fecaca; }
+  .roomInfo .pill { background: rgba(255,255,255,.7); border-radius: 4px; padding: 1px 6px; font-weight: 800; }
+  .logoPreview { display: flex; align-items: center; gap: 12px; padding: 10px; background: #f8fafc; border: 1px solid #dbe3ec; border-radius: 9px; }
+  .logoPreview .box { width: 84px; height: 84px; flex: 0 0 84px; border-radius: 10px; background: #fff; border: 1px solid #e2e8f0; padding: 4px; display: grid; place-items: center; overflow: hidden; }
+  .logoPreview .box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .logoPreview .meta { flex: 1; min-width: 0; font-size: 11.5px; color: #475569; }
+  .logoPreview .meta b { display: block; font-size: 12px; color: #0f172a; margin-bottom: 3px; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; box-shadow: 0 10px 30px rgba(2,6,23,.4); z-index: 10000; animation: toastIn .25s; }
+  @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+  .toast.success { background: #059669; }
+  .toast.error { background: #dc2626; }
+  .toast.info { background: #4338ca; }
+  .page { background: #fff; box-shadow: 0 6px 24px rgba(15,23,42,.18); border-radius: 2px; color: #000; display: block; font-family: "Times New Roman", Times, Georgia, serif; padding: 12mm; position: relative; }
+  .page.diary-page { page: diary-page; width: 210mm; min-height: 297mm; }
+  .page.absentees-page { page: absentees-page; width: 297mm; min-height: 210mm; padding: 8mm; }
+  .page.room-allot-page { page: room-allot-page; width: 210mm; min-height: 297mm; padding: 10mm; }
+  .page.access-keys-page { page: access-keys-page; width: 210mm; min-height: 297mm; padding: 10mm; }
+  .pageHeader { display: flex; align-items: center; gap: 14px; padding: 0 0 10px 0; margin-bottom: 8px; width: 100%; }
+  .pageHeader .logoBox { flex: 0 0 auto; max-width: 120px; max-height: 90px; display: grid; place-items: center; overflow: hidden; }
+  .pageHeader .logoBox img { max-width: 120px; max-height: 90px; width: auto; height: auto; object-fit: contain; }
+  .pageHeader .inst { flex: 1 1 auto; min-width: 0; text-align: center; padding: 0 8px; }
+  .pageHeader .inst h2 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: #0f172a; line-height: 1.2; font-family: "Times New Roman", Times, Georgia, serif; }
+  .pageHeader .inst p.addr { margin: 4px 0 0; font-size: 11px; color: #334155; font-weight: 600; line-height: 1.35; }
+  .pageHeader .inst p.diaryLabel { margin: 6px 0 0; font-size: 12.5px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; color: #0f172a; }
+  .pageHeader .yearBox { flex: 0 0 auto; min-width: 110px; padding: 0 10px 0 4px; font-size: 12px; font-weight: 700; color: #334155; text-align: right; white-space: nowrap; line-height: 1.35; }
+  .pageHeader .yearBox .pg { display: block; font-weight: 600; color: #64748b; font-size: 10px; white-space: nowrap; }
+  .diary { width: 100%; border-collapse: collapse; font-size: 12.5px; table-layout: fixed; font-family: "Times New Roman", Times, Georgia, serif; }
+  .diary td, .diary th { border: 1px solid #000 !important; padding: 3px 6px; vertical-align: middle; height: 22px; word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; box-sizing: border-box; line-height: 1.2; }
+  .diary .titleCell { text-align: center; font-weight: 700; font-size: 14px; padding: 6px 8px; }
+  .diary .headRow th { text-align: center; font-weight: 700; background: #f1f5f9; font-size: 12px; height: 24px; }
+  .diary td.c { text-align: center; }
+  .diary .regCell { font-size: 11.5px; line-height: 1.3; word-break: break-word; text-align: left; }
+  .diary .regCell .lbl { font-weight: 700; }
+  .diary td.nowrap { white-space: normal; word-break: break-word; }
+  .diary .lblCell { font-weight: 700; white-space: normal; word-break: break-word; text-align: left; }
+  .diary .lblCell b { font-weight: 700; }
+  .signoff { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 14mm; font-size: 12px; font-family: "Times New Roman", Times, Georgia, serif; page-break-inside: avoid; break-inside: avoid; }
+  .signoff td { border: 1px solid #000; padding: 4px 8px; height: 32px; vertical-align: middle; box-sizing: border-box; }
+  .signoff td.lbl { width: 26%; font-weight: 700; background: #f8fafc; }
+  .abBigLogo { display: flex; justify-content: center; align-items: center; padding: 0 0 4px 0; }
+  .abBigLogo img { max-height: 62px; max-width: 260px; width: auto; height: auto; object-fit: contain; }
+  .abAddrLine { text-align: center; font-size: 12px; font-weight: 600; color: #334155; line-height: 1.35; margin: 0 0 8px 0; }
+  .abHeader { position: relative; text-align: center; margin: 0 0 8px 0; line-height: 1.35; padding: 0 90px 0 90px; }
+  .abHeader .abTitle { font-size: 16px; font-weight: 800; color: #000; }
+  .abHeader .abSub { margin-top: 2px; font-size: 13.5px; font-weight: 700; }
+  .abHeader .abDate { margin-top: 2px; font-size: 13.5px; font-weight: 700; }
+  .abStatement { width: 100%; border-collapse: collapse; font-size: 12.5px; table-layout: auto; font-family: "Times New Roman", Times, Georgia, serif; }
+  .abStatement th, .abStatement td { border: 1px solid #000; padding: 12px 6px; vertical-align: middle; text-align: center; overflow-wrap: break-word; line-height: 1.35; }
+  .abStatement th { background: #f8fafc; font-weight: 700; font-size: 12px; height: 45px; white-space: nowrap; }
+  .abStatement td { height: 100px; }
+  .abStatement td.regCell { font-size: 12.5px; line-height: 1.3; text-align: left; padding-left: 10px; letter-spacing: -.1px; font-weight: 500; word-break: break-word; }
+  .abSignArea { display: flex; justify-content: flex-end; padding-top: 12px; padding-right: 8px; }
+  .abSignBlock { text-align: right; font-size: 13px; font-weight: 700; }
+  .abSignLine { display: inline-block; min-width: 220px; border-top: 1px solid #000; padding-top: 4px; margin-top: 44px; }
+  .roomAllotment { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; font-family: "Times New Roman", Times, Georgia, serif; }
+  .roomAllotment th, .roomAllotment td { border: 1px solid #000; padding: 6px 8px; vertical-align: middle; text-align: center; overflow-wrap: break-word; line-height: 1.25; }
+  .roomAllotment th { background: #fff; font-weight: 700; font-size: 13px; height: 40px; }
+  .roomAllotment tbody td { height: auto; min-height: 40px; font-size: 12.5px; }
+  .roomAllotment td.regCell { font-size: 12.5px; line-height: 1.3; text-align: left; padding-left: 8px; letter-spacing: -.1px; word-break: break-word; }
+  .roomAllotment tr.totalRow td { background: #fff; font-weight: 800; height: 30px; font-size: 13px; }
+  .roomAllotment tr.signRow td { height: 90px; vertical-align: bottom; text-align: right; padding: 6px 14px 8px 8px; font-size: 13.5px; font-weight: 800; background: #fff; }
+  .accessKeyTable { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; font-family: "Times New Roman", Times, Georgia, serif; }
+  .accessKeyTable th, .accessKeyTable td { border: 1px solid #000; padding: 10px 6px; vertical-align: middle; text-align: center; overflow-wrap: break-word; line-height: 1.35; height: 28px; }
+  .accessKeyTable th { background: #f8fafc; font-weight: 700; font-size: 14px; height: 40px; }
+  .accessKeyTable td.regCell { text-align: left; }
+  .overCapBanner { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin: -12px -12px 10px -12px; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: #fff; font-size: 12.5px; font-weight: 700; border-bottom: 2px solid #991b1b; }
+  .overCapBanner .icn { font-size: 18px; flex: 0 0 auto; }
+  .overCapBanner .msg { flex: 1; min-width: 0; line-height: 1.35; }
+  .overCapBanner .msg small { display: block; font-weight: 600; opacity: .9; font-size: 11px; margin-top: 2px; }
+  .overCapBanner button { background: #fff; color: #b91c1c; border: 0; padding: 6px 12px; border-radius: 6px; font-size: 11.5px; font-weight: 800; cursor: pointer; font-family: inherit; }
+  .modal-overlay { position: fixed; inset: 0; z-index: 600; background: rgba(15,23,42,.55); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 20px; }
+  .modal { width: 100%; max-width: 780px; background: #fff; border-radius: 16px; box-shadow: 0 30px 80px rgba(2,6,23,.5); overflow: hidden; display: flex; flex-direction: column; max-height: 94vh; }
+  .modal-head { padding: 16px 20px; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: #fff; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .modal-head .icon { font-size: 22px; }
+  .modal-head h3 { margin: 0; font-size: 16px; font-weight: 800; }
+  .modal-head p { margin: 2px 0 0; font-size: 12px; opacity: .9; font-weight: 600; }
+  .modal-body { padding: 18px 20px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
+  .modal-info { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 12.5px; }
+  .modal-info .lbl { font-size: 10.5px; text-transform: uppercase; letter-spacing: .4px; font-weight: 800; color: #991b1b; opacity: .7; }
+  .modal-info .val { font-weight: 700; color: #0f172a; margin-top: 1px; }
+  .modal-info .val.over { color: #dc2626; }
+  .modal-alert { padding: 12px 14px; border-radius: 10px; margin-bottom: 14px; font-size: 12.5px; font-weight: 700; line-height: 1.5; }
+  .modal-alert.danger { background: #fef2f2; border: 1.5px solid #dc2626; color: #991b1b; display: flex; gap: 10px; align-items: flex-start; }
+  .modal-alert .ai { font-size: 18px; flex: 0 0 auto; }
+  .modal-alert b { display: block; margin-bottom: 3px; }
+  .modal-section-label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: .6px; margin: 4px 0 8px; display: flex; align-items: center; justify-content: space-between; }
+  .modal-section-label .cnt { font-size: 10.5px; padding: 3px 8px; border-radius: 5px; background: #e2e8f0; color: #475569; }
+  .roomList { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+  .roomOption { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 2px solid #dbe3ec; border-radius: 10px; cursor: pointer; background: #fff; }
+  .roomOption.fits { border-color: #22c55e; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); }
+  .roomOption.over { border-color: #f87171; background: #fef2f2; opacity: .92; cursor: not-allowed; }
+  .roomOption .radio { width: 20px; height: 20px; flex: 0 0 20px; border: 2px solid #cbd5e1; border-radius: 50%; display: grid; place-items: center; background: #fff; }
+  .roomOption.fits .radio { border-color: #16a34a; }
+  .roomOption.selected .radio::after { content: ''; width: 10px; height: 10px; border-radius: 50%; }
+  .roomOption.fits.selected .radio::after { background: #15803d; }
+  .roomOption .meta { flex: 1; min-width: 0; }
+  .roomOption .meta b { display: block; font-size: 13px; font-weight: 700; color: #0f172a; }
+  .roomOption .meta small { font-size: 11px; color: #64748b; font-weight: 600; display: block; margin-top: 2px; }
+  .roomOption .status { font-size: 10.5px; font-weight: 800; padding: 5px 10px; border-radius: 6px; white-space: nowrap; letter-spacing: .4px; text-transform: uppercase; }
+  .roomOption.fits .status { background: #16a34a; color: #fff; }
+  .roomOption.over .status { background: #dc2626; color: #fff; }
+  .distributePanel { border: 2px solid #7c3aed; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); margin-bottom: 16px; }
+  .dpHead { padding: 10px 14px; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: #fff; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 800; }
+  .dpHead .icn { font-size: 16px; }
+  .dpHead .title { flex: 1; }
+  .dpHead .title small { display: block; font-size: 10.5px; font-weight: 600; opacity: .85; margin-top: 1px; }
+  .dpBody { padding: 14px; }
+  .dpPrimary { background: #fff; border: 1.5px solid #c4b5fd; border-radius: 9px; padding: 10px 12px; margin-bottom: 12px; }
+  .dpPrimaryLabel { font-size: 10px; font-weight: 800; color: #7c3aed; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .dpPrimaryRoom { font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 2px; }
+  .dpPrimaryDetail { font-size: 11.5px; color: #475569; font-weight: 600; line-height: 1.5; }
+  .dpPrimaryDetail b { color: #7c3aed; font-weight: 800; }
+  .dpSectionHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
+  .dpSectionLabel { font-size: 11px; font-weight: 800; color: #6d28d9; text-transform: uppercase; letter-spacing: .4px; }
+  .dpSectionLabel b { color: #7c3aed; font-size: 13px; }
+  .dpAutoFillBtn { border: 1px solid #a78bfa; background: #fff; color: #6d28d9; padding: 5px 11px; border-radius: 6px; font-size: 10.5px; font-weight: 800; cursor: pointer; font-family: inherit; }
+  .dpRoomList { display: flex; flex-direction: column; gap: 6px; }
+  .dpRoom { display: flex; align-items: center; gap: 10px; padding: 9px 11px; background: #fff; border: 1.5px solid #e9d5ff; border-radius: 8px; }
+  .dpRoom.active { border-color: #a855f7; background: #faf5ff; }
+  .dpRoom input[type="checkbox"] { width: 16px; height: 16px; flex: 0 0 auto; margin: 0; cursor: pointer; accent-color: #7c3aed; }
+  .dpRoomName { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 700; color: #0f172a; }
+  .dpRoomName small { display: block; font-size: 10.5px; color: #64748b; font-weight: 600; margin-top: 1px; }
+  .dpRoomName small b { color: #16a34a; }
+  .dpRoom input[type="number"] { width: 76px; flex: 0 0 auto; padding: 6px 8px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 12.5px; font-weight: 700; text-align: center; font-family: inherit; color: #0f172a; }
+  .dpRoom input[type="number"]:disabled { background: #f1f5f9; color: #94a3b8; cursor: not-allowed; }
+  .dpStatus { padding: 10px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; margin: 12px 0 10px; text-align: center; }
+  .dpStatus.ok { background: #f0fdf4; border: 1.5px solid #22c55e; color: #15803d; }
+  .dpStatus.warn { background: #fffbeb; border: 1.5px solid #f59e0b; color: #92400e; }
+  .dpStatus.error { background: #fef2f2; border: 1.5px solid #dc2626; color: #991b1b; }
+  .dpPreview { background: #fff; border: 1px dashed #c4b5fd; border-radius: 8px; padding: 10px 12px; font-size: 12px; margin-bottom: 10px; max-height: 180px; overflow-y: auto; }
+  .dpPreviewLabel { font-size: 10px; font-weight: 800; color: #7c3aed; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .dpPreviewRow { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 11.5px; }
+  .dpPreviewRow + .dpPreviewRow { border-top: 1px dashed #e9d5ff; padding-top: 5px; margin-top: 2px; }
+  .dpPreviewRow .dpNum { font-weight: 800; color: #7c3aed; min-width: 38px; text-align: right; flex: 0 0 38px; }
+  .dpPreviewRow .dpArrow { color: #94a3b8; font-weight: 700; flex: 0 0 auto; }
+  .dpPreviewRow .dpDest { flex: 1; color: #334155; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dpPreviewRow.current .dpDest { color: #7c3aed; font-weight: 800; }
+  .dpApplyBtn { width: 100%; padding: 12px; border: 0; border-radius: 8px; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: #fff; font-size: 13.5px; font-weight: 800; cursor: pointer; font-family: inherit; }
+  .dpApplyBtn:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; }
+  .dpWarning { font-size: 11.5px; font-weight: 700; padding: 8px 11px; border-radius: 7px; margin-bottom: 10px; }
+  .dpWarning.danger { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+  .manualMovePanel { border: 2px solid #7c3aed; border-radius: 12px; overflow: hidden; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); margin-bottom: 16px; }
+  .mmHead { padding: 10px 14px; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: #fff; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 800; }
+  .mmHead .icn { font-size: 16px; }
+  .mmHead .title { flex: 1; }
+  .mmHead .title small { display: block; font-size: 10.5px; font-weight: 600; opacity: .85; margin-top: 1px; }
+  .mmBody { padding: 14px; }
+  .mmBody label { display: block; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: #7c3aed; margin-bottom: 6px; }
+  .mmBody select { width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-family: inherit; background: #fff; color: #0f172a; cursor: pointer; font-weight: 600; }
+  .mmBody .mmHint { font-size: 11.5px; font-weight: 600; margin-top: 8px; padding: 7px 10px; border-radius: 7px; }
+  .mmBody .mmHint.warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+  .mmBody .mmHint.ok { background: #f0fdf4; border: 1px solid #a7f3d0; color: #166534; }
+  .modalStudentWrap { border: 1.5px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
+  .modalStudentHeader { padding: 10px 12px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; gap: 8px; align-items: center; }
+  .modalStudentHeader input[type="text"] { flex: 1; padding: 8px 10px 8px 32px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12.5px; font-family: inherit; background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.4'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>") no-repeat 10px center; color: #0f172a; }
+  .modalStudentHeader input[type="checkbox"] { width: 16px; height: 16px; flex: 0 0 auto; margin: 0; cursor: pointer; accent-color: #7c3aed; }
+  .modalStudentHeader .mini-cnt { font-size: 11px; font-weight: 700; color: #475569; background: #e2e8f0; padding: 5px 10px; border-radius: 6px; white-space: nowrap; }
+  .modalStudentList { max-height: 320px; overflow-y: auto; background: #fff; }
+  .modalStudentList .row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-size: 12.5px; }
+  .modalStudentList .row:last-child { border-bottom: 0; }
+  .modalStudentList .row:hover { background: #f8fafc; }
+  .modalStudentList .row.selected { background: #f5f3ff; }
+  .modalStudentList .row .sCheck { flex: 0 0 auto; display: flex; align-items: center; }
+  .modalStudentList .row .sCheck input { width: 16px; height: 16px; cursor: pointer; accent-color: #7c3aed; margin: 0; }
+  .modalStudentList .row .sReg { flex: 0 0 130px; font-family: "Times New Roman", Times, Georgia, serif; font-weight: 700; color: #4338ca; font-size: 12.5px; }
+  .modalStudentList .row .sName { flex: 1; min-width: 0; color: #0f172a; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .modalStudentList .row .sMove { flex: 0 0 auto; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; cursor: pointer; font-family: inherit; border: 1px solid #7c3aed; background: #f5f3ff; color: #6d28d9; }
+  .modalStudentList .row .sMove:disabled { background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; cursor: not-allowed; }
+  .modalStudentList .row .sDel { flex: 0 0 auto; width: 26px; height: 26px; border: 1px solid #fecaca; background: #fef2f2; color: #dc2626; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 800; line-height: 1; display: grid; place-items: center; }
+  .modalStudentList .emptySmall { padding: 20px; text-align: center; color: #94a3b8; font-size: 12.5px; font-weight: 600; }
+  .bulkBar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: #fff; font-size: 12.5px; font-weight: 700; }
+  .bulkBar .cnt { background: rgba(255,255,255,.2); padding: 3px 9px; border-radius: 5px; font-weight: 800; }
+  .bulkBar .spacer { flex: 1; }
+  .bulkBar button { border: 0; padding: 6px 11px; border-radius: 6px; font-size: 11.5px; font-weight: 800; cursor: pointer; font-family: inherit; }
+  .bulkBar button.bMove { background: #fff; color: #6d28d9; }
+  .bulkBar button.bMove:disabled { background: rgba(255,255,255,.3); color: rgba(255,255,255,.7); cursor: not-allowed; }
+  .bulkBar button.bDel { background: rgba(220,38,38,.95); color: #fff; }
+  .bulkBar button.bClear { background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.3); }
+  .modal-foot { padding: 14px 20px; border-top: 2px solid #e2e8f0; display: flex; gap: 12px; justify-content: space-between; align-items: center; background: #f8fafc; flex-shrink: 0; position: sticky; bottom: 0; z-index: 5; }
+  .modal-foot .leftNote { font-size: 11.5px; color: #64748b; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 auto; }
+  .modal-foot .btns { display: flex; gap: 10px; flex-shrink: 0; }
+  .modal-foot .btn { padding: 10px 16px; font-size: 13px; white-space: nowrap; flex-shrink: 0; }
+  .modal-foot .btn.successSolid { background: #16a34a; color: #fff; }
+  .modal-foot .btn.successSolid:disabled { background: #cbd5e1; cursor: not-allowed; color: #64748b; }
+  .studentPanel { margin-top: 8px; border: 1.5px solid #c7d2fe; border-radius: 10px; overflow: hidden; background: #f8fafc; }
+  .studentPanel .spHead { display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: #eef2ff; border-bottom: 1px solid #c7d2fe; }
+  .studentPanel .spHead input { flex: 1; padding: 7px 10px 7px 30px; border: 1px solid #cbd5e1; border-radius: 7px; font-size: 12px; font-family: inherit; background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.4'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>") no-repeat 9px center; color: #0f172a; }
+  .studentPanel .spHead .mini-cnt { font-size: 11px; font-weight: 700; color: #4338ca; background: #e0e7ff; padding: 4px 9px; border-radius: 5px; white-space: nowrap; }
+  .studentPanel .spList { max-height: 220px; overflow-y: auto; background: #fff; }
+  .studentPanel .spList .row { display: flex; align-items: center; gap: 8px; padding: 7px 10px; font-size: 12px; border-bottom: 1px solid #f1f5f9; }
+  .studentPanel .spList .row:last-child { border-bottom: 0; }
+  .studentPanel .spList .row .sReg { flex: 0 0 120px; font-family: "Times New Roman", Times, Georgia, serif; font-weight: 700; color: #4338ca; font-size: 12px; }
+  .studentPanel .spList .row .sName { flex: 1; min-width: 0; color: #0f172a; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .studentPanel .spList .row .sDel { width: 24px; height: 24px; flex: 0 0 24px; border: 1px solid #fecaca; background: #fef2f2; color: #dc2626; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: 800; line-height: 1; display: grid; place-items: center; }
+  .studentPanel .emptySmall { padding: 18px; text-align: center; color: #94a3b8; font-size: 12px; font-weight: 600; }
+  .ms-overlay { position: fixed; inset: 0; z-index: 800; background: rgba(15,23,42,.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 40px; }
+  .ms-workspace { width: 100%; max-width: 1200px; height: 100%; max-height: 800px; background: #fff; border-radius: 16px; box-shadow: 0 40px 100px rgba(2,6,23,.6); display: flex; flex-direction: column; overflow: hidden; }
+  .ms-workspace.small { max-width: 700px; max-height: 500px; }
+  .ms-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+  .ms-title { font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+  .ms-nav { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #64748b; padding: 10px 20px; background: #fff; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; }
+  .ms-nav span.crumb { cursor: pointer; transition: color .15s; }
+  .ms-nav span.crumb:hover { color: #4f46e5; }
+  .ms-nav span.sep { color: #cbd5e1; }
+  .ms-body { flex: 1; display: grid; grid-template-columns: 280px 1fr; min-height: 0; }
+  .ms-sidebar { background: #f8fafc; border-right: 1px solid #e2e8f0; overflow-y: auto; padding: 16px; }
+  .ms-main { background: #fff; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
+  .ms-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 10px; flex-wrap: wrap; }
+  .ms-list { display: flex; flex-direction: column; gap: 8px; }
+  .ms-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; cursor: pointer; transition: .15s; position: relative; }
+  .ms-item:hover { border-color: #c7d2fe; background: #f8fafc; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15,23,42,.05); }
+  .ms-item.folder { border-left: 4px solid #f59e0b; }
+  .ms-item.exam { border-left: 4px solid #4f46e5; }
+  .ms-item-icon { font-size: 20px; flex: 0 0 24px; text-align: center; }
+  .ms-item-info { flex: 1; min-width: 0; }
+  .ms-item-title { font-size: 13.5px; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+  .ms-item-meta { font-size: 11px; color: #64748b; font-weight: 500; }
+  .ms-item-path { font-size: 10.5px; color: #7c3aed; background: #f5f3ff; padding: 2px 6px; border-radius: 4px; font-weight: 700; display: inline-block; margin-top: 4px; }
+  .ms-item-actions { display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
+  .ms-item:hover .ms-item-actions { opacity: 1; }
+  .ms-item-actions button { border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; height: 28px; padding: 0 10px; cursor: pointer; font-size: 12px; color: #475569; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-weight: 700; }
+  .ms-item-actions button:hover { background: #eef2ff; border-color: #c7d2fe; color: #4f46e5; }
+  .ms-item-actions button.del:hover { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
+  .folder-tree-node { padding: 6px 10px; font-size: 12.5px; font-weight: 600; color: #334155; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: .15s; }
+  .folder-tree-node:hover { background: #e2e8f0; }
+  .folder-tree-node.active { background: #e0e7ff; color: #4338ca; font-weight: 700; }
+  .floating-bar { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #fff; padding: 12px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 15px; z-index: 1000; animation: slideUp .3s ease-out; }
+  @keyframes slideUp { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+  .floating-bar .count { font-weight: 700; font-size: 14px; color: #cbd5e1; margin-right: 10px; }
+  .floating-bar button { border: 0; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: .15s; }
+  .floating-bar button.btn-primary { background: #4f46e5; color: #fff; }
+  .floating-bar button.btn-secondary { background: rgba(255,255,255,.15); color: #fff; }
+  .floating-bar button.btn-danger { background: #dc2626; color: #fff; }
+  .floating-bar button:hover { transform: translateY(-1px); }
+  .userSelectWrap { display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: #eef2ff; border-bottom: 1px solid #c7d2fe; font-size: 13px; font-weight: 700; color: #4338ca; }
+  .userSelectWrap select { padding: 7px 12px; border: 1.5px solid #a5b4fc; border-radius: 8px; font-size: 13px; font-weight: 700; background: #fff; color: #4338ca; cursor: pointer; font-family: inherit; min-width: 200px; }
+  .ms-item { position: relative; }
+  .ms-select-checkbox { width: 18px; height: 18px; flex: 0 0 18px; cursor: pointer; accent-color: #4f46e5; margin-right: 4px; }
+  .ms-item.selected { border-color: #818cf8; background-color: #f5f3ff; box-shadow: 0 0 0 1px #818cf8; }
+  .floating-bulk-bar {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: #0f172a; color: #fff; padding: 12px 24px; border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 16px;
+    z-index: 9999; animation: slideUp .3s ease-out;
+  }
+  .floating-bulk-bar .count { font-weight: 700; font-size: 14px; color: #cbd5e1; }
+  .floating-bulk-bar button {
+    border: 0; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: inherit; transition: .15s;
+  }
+  .floating-bulk-bar button.b-download { background: #4f46e5; color: #fff; }
+  .floating-bulk-bar button.b-restore { background: #16a34a; color: #fff; }
+  .floating-bulk-bar button.b-delete { background: #dc2626; color: #fff; }
+  .floating-bulk-bar button.b-clear { background: rgba(255,255,255,.15); color: #fff; }
+  .floating-bulk-bar button:hover { transform: translateY(-1px); filter: brightness(1.1); }
+  @media (max-width: 1200px) { .userChip { max-width: 180px; } .tab { padding: 6px 10px; font-size: 12px; } .app { grid-template-columns: 420px 1fr; } }
+  @media (max-width: 980px) { .app { grid-template-columns: 1fr; } .editor { max-height: 45vh; border-right: 0; border-bottom: 1px solid #dbe3ec; } .tabs { display: none; } .ms-overlay { padding: 10px; } .ms-body { grid-template-columns: 1fr; } }
+  @media print {
+    html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; }
+    .topbar, .editor, .login-screen, .toast, .modal-overlay, .ms-overlay, .floating-bar, .floating-bulk-bar { display: none !important; }
+    .appRoot { height: auto !important; display: block !important; overflow: visible !important; }
+    .app { display: block !important; grid-template-columns: none !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+    .previewWrap { overflow: visible !important; background: #fff !important; height: auto !important; padding: 0 !important; margin: 0 !important; display: block !important; }
+    #preview { padding: 0 !important; margin: 0 !important; gap: 0 !important; display: block !important; }
+    .page, .page.diary-page, .page.absentees-page, .page.room-allot-page, .page.access-keys-page { display: block !important; width: 100% !important; max-width: 100% !important; min-height: 0 !important; height: auto !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important; border-radius: 0 !important; overflow: visible !important; position: relative !important; }
+    .page + .page { page-break-before: always !important; break-before: page !important; }
+    .page.diary-page      { page: diary-page !important; }
+    .page.absentees-page  { page: absentees-page !important; }
+    .page.room-allot-page { page: room-allot-page !important; }
+    .page.access-keys-page { page: access-keys-page !important; }
+    .page table { width: 100% !important; font-family: "Times New Roman", Times, Georgia, serif !important; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <form class="login-card" id="loginForm" autocomplete="off">
+    <div class="login-logoWrap" id="loginLogoWrap"></div>
+    <h1>Invigilator Diary</h1>
+    <p class="sub">Sign in to continue</p>
+    <p class="orgName" id="loginOrgName">Garden City University</p>
+    <p class="orgAddr" id="loginOrgAddr">16th KM, Old Madras Rd, Battarahalli, Bengaluru, Karnataka 560049</p>
+    <label>Select User
+      <select id="loginEmail" required></select>
+    </label>
+    <button type="submit" class="login-btn">Sign In →</button>
+    <div class="login-err hidden" id="loginErr">Please select a user.</div>
+    <p class="login-foot">Invigilator Diary · Examination Management</p>
+  </form>
+</div>
+
+<div class="appRoot hidden" id="appRoot">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brandLogoBox" id="topLogoBox"></div>
+      <div class="brandText"><b>Invigilator Diary</b><small id="topOrgName">Garden City University</small></div>
+    </div>
+    <div class="tabs" id="mainTabs">
+      <button class="tab active" data-view="diary">📋 Invigilation Diary</button>
+      <button class="tab" data-view="absentees">📝 Absentees Statement</button>
+      <button class="tab" data-view="roomAllotment">🏫 Room Allotment</button>
+      <button class="tab" data-view="accessKeys">🔑 Access Keys</button>
+      <button class="tab" data-view="database">🗄️ Student Database</button>
+      <button class="tab" data-view="users" id="tabUsers" style="display:none;">👥 Users</button>
+      <button class="tab" data-view="folders" id="tabFolders" style="background:#f59e0b;color:#fff;border-color:#d97706;">📁 Master Storage</button>
+    </div>
+    <div class="topActions">
+      <span id="pageInfo" style="font-size:12px;opacity:.65;margin-right:4px;">0 pages</span>
+      <span id="saveStatus" style="font-size:11px;color:#94a3b8;margin-right:4px;">saved</span>
+      <button class="btn ghost" id="undoBtn" title="Undo (Ctrl+Z)">↶ Undo</button>
+      <div class="menuWrap" style="position:relative;">
+        <button class="btn primary" id="printMenuBtn">🖨 Print ▾</button>
+        <div class="menuDrop hidden" id="printMenu" style="position:absolute; right:0; top:calc(100% + 6px); background:#fff; color:#0f172a; border:1px solid #dbe3ec; border-radius:10px; box-shadow:0 12px 40px rgba(2,6,23,.35); padding:6px; min-width:260px; z-index:60;">
+          <button class="mi" data-act="printDiary" style="display:block; width:100%; text-align:left; padding:8px 12px; border:0; background:transparent; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; color:#334155; font-family:inherit;">📋 Print Invigilation Diary</button>
+          <button class="mi" data-act="printAbsentees" style="display:block; width:100%; text-align:left; padding:8px 12px; border:0; background:transparent; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; color:#334155; font-family:inherit;">📝 Print Absentees Statement</button>
+          <button class="mi" data-act="printRoomAllotment" style="display:block; width:100%; text-align:left; padding:8px 12px; border:0; background:transparent; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; color:#334155; font-family:inherit;">🏫 Print Room Allotment</button>
+          <button class="mi" data-act="printAccessKeys" style="display:block; width:100%; text-align:left; padding:8px 12px; border:0; background:transparent; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; color:#334155; font-family:inherit;">🔑 Print Access Keys</button>
+          <div style="height:1px; background:#e2e8f0; margin:6px 0;"></div>
+          <button class="mi" data-act="printAll" style="display:block; width:100%; text-align:left; padding:8px 12px; border:0; background:transparent; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; color:#334155; font-family:inherit;">📚 Print All</button>
+          <button class="mi" data-act="printNoLetterhead" style="display:block; width:100%; text-align:left; padding:8px 12px; border:0; background:transparent; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; color:#334155; font-family:inherit;">📄 Print Current View Without Letterhead</button>
+          <div style="height:1px; background:#e2e8f0; margin:6px 0;"></div>
+          <button class="mi" data-act="exportWord" style="display:block; width:100%; text-align:left; padding:8px 12px; border:0; background:transparent; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; color:#334155; font-family:inherit;">📝 Export to Word (.doc)</button>
+          <div style="height:1px; background:#e2e8f0; margin:6px 0;"></div>
+          <button class="mi" data-act="backupAll" style="display:block; width:100%; text-align:left; padding:8px 12px; border:0; background:transparent; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; color:#059669; font-family:inherit;">📦 Backup All Data (JSON)</button>
+          <button class="mi" data-act="restoreAll" style="display:block; width:100%; text-align:left; padding:8px 12px; border:0; background:transparent; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; color:#d97706; font-family:inherit;">📤 Restore All Data</button>
+        </div>
+      </div>
+      <button class="btn ghost" id="topAdd" title="Add Exam (Ctrl+N)">+ Add</button>
+      <div class="userChip" id="userChip"><span id="userLabel">MohanRaj</span><div class="avatar" id="userAvatar">M</div></div>
+      <button class="btn danger" id="logoutBtn">Logout</button>
+    </div>
+  </header>
+  <div class="app">
+    <aside class="editor" id="editor"></aside>
+    <main class="previewWrap"><div id="preview"></div></main>
+  </div>
+</div>
+
+<div id="masterStorageModal" class="ms-overlay hidden">
+  <div class="ms-workspace">
+    <div class="ms-header">
+      <div class="ms-title">📁 Master Storage</div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn primary" id="msNewFolderBtn">+ New Folder</button>
+        <button class="btn subtle" onclick="closeMasterStorage()">Close</button>
+      </div>
+    </div>
+    <div class="userSelectWrap" id="msUserSelectWrap" style="display:none;"></div>
+    <div class="ms-nav" id="msBreadcrumb">
+      <span class="crumb" onclick="msNavigate([])">📁 Home</span>
+    </div>
+    <div class="ms-body">
+      <div class="ms-sidebar" id="msSidebar"></div>
+      <div class="ms-main">
+        <div class="ms-toolbar">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="text" id="msSearchInput" placeholder="Universal Search..." class="manualInput" style="width:300px; padding:8px 12px; text-align:left; font-size:13px;" oninput="renderMSContents()">
+            <button class="btn subtle mini" onclick="document.getElementById('msSearchInput').value=''; renderMSContents();">Clear</button>
+          </div>
+        </div>
+        <div class="ms-list" id="msContents"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="moveFolderModal" class="ms-overlay hidden" style="z-index: 900;">
+  <div class="ms-workspace small">
+    <div class="ms-header" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; border-bottom: none;">
+      <div class="ms-title" style="color: #fff;">📁 Select Destination</div>
+      <button class="btn subtle" onclick="closeMoveModal()">Cancel</button>
+    </div>
+    <div class="ms-nav" id="mvBreadcrumb">
+      <span class="crumb" onclick="mvNavigate([])">📁 Home</span>
+    </div>
+    <div class="ms-body">
+      <div class="ms-sidebar" id="mvSidebar" style="width: 240px;"></div>
+      <div class="ms-main">
+        <div class="ms-toolbar">
+          <div class="ms-title" style="font-size: 14px; color: #64748b;">Select destination folder</div>
+          <button class="btn primary" id="confirmMoveBtn">Confirm</button>
+        </div>
+        <div class="ms-list" id="mvContents"></div>
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+          <label style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;">— OR Create New Folder Here —</label>
+          <div style="display: flex; gap: 8px; margin-top: 8px;">
+            <input type="text" id="mvNewFolderName" placeholder="Type new folder name..." style="flex: 1; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px;">
+            <button class="btn primary" id="mvCreateFolderBtn" style="padding: 0 16px;">Create</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+<input type="file" id="hiddenFileInput" class="hidden" accept=".json,.csv,.txt">
+<input type="file" id="hiddenCsvInput" class="hidden" accept=".csv,.txt">
+<input type="file" id="hiddenExamImportInput" class="hidden" accept=".csv,.txt">
+<input type="file" id="hiddenKeyInput" class="hidden" accept=".csv,.txt,.xlsx,.xls" multiple>
+<input type="file" id="hiddenDbInput" class="hidden" accept=".csv,.txt">
+<input type="file" id="hiddenFolderRestoreInput" class="hidden" accept=".json">
+<input type="file" id="hiddenBackupInput" class="hidden" accept=".json">
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   INVIGILATOR DIARY — Master Storage with Bulk Actions & Restore
+   ═══════════════════════════════════════════════════════════════ */
+
+const LS = { users:'invigilator_diary_users_v6', brand:'invigilator_diary_brand_v6', exams:'invigilator_diary_exams_v6', session:'invigilator_diary_session_v6', viewMode:'invigilator_diary_viewMode_v6', database:'gcu_student_db', accessKeys:'gcu_access_keys', folders:'gcu_folders' };
+const DEFAULT_ADDRESS = '16th KM, Old Madras Rd, Battarahalli, Bengaluru, Karnataka 560049';
+const DEFAULT_ROWS_PER_PAGE = 27;
+const DEFAULT_EXTRA_ROWS = 2;
+
+function loadLS(k, f) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : f; } catch (e) { console.error('[loadLS] error', k, e); return f; } }
+function saveLS(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { console.error('[saveLS] error', k, e); return false; } }
+
+let usersDB = loadLS(LS.users, [
+  { username: 'MohanRaj', role: 'admin' },
+  { username: 'Bharath', role: 'user' },
+  { username: 'Prasad', role: 'user' },
+  { username: 'Shiva', role: 'user' }
+]);
+usersDB.forEach(u => { delete u.password; });
+function saveUsersDB() { return saveLS(LS.users, usersDB); }
+
+const ALL_RIGHTS = [
+  { key: 'delete_exam',           label: '🗑 Delete Exams',          desc: 'Delete exam entries permanently' },
+  { key: 'edit_branding',         label: '🎓 Edit Institution/Logo', desc: 'Change institution name, logo, address' },
+  { key: 'access_master_storage', label: '📁 Master Storage',        desc: 'Access Master Storage workspace' },
+  { key: 'use_folder_actions',    label: '📂 Move to Folder',        desc: 'Move exams into folders' },
+  { key: 'export_word',           label: '📝 Export to Word',        desc: 'Export documents to Word' },
+  { key: 'print_all',             label: '🖨 Print All',             desc: 'Print all sections combined' },
+  { key: 'undo',                  label: '↶ Undo',                   desc: 'Use undo history' },
+  { key: 'view_absentees',        label: '📝 Absentees Tab',         desc: 'Access Absentees Statement' },
+  { key: 'view_room',             label: '🏫 Room Allotment Tab',    desc: 'Access Room Allotment' },
+  { key: 'view_accesskeys',       label: '🔑 Access Keys Tab',       desc: 'Access Access Keys upload' },
+  { key: 'view_database',         label: '🗄 Student Database Tab',  desc: 'Access Student Database' },
+  { key: 'manage_users',          label: '👥 Manage Users',          desc: 'Add/remove/configure users' }
+];
+const DEFAULT_USER_RIGHTS = { delete_exam: false, edit_branding: false, access_master_storage: true, use_folder_actions: true, export_word: true, print_all: false, undo: false, view_absentees: true, view_room: true, view_accesskeys: false, view_database: false, manage_users: false };
+const DEFAULT_ADMIN_RIGHTS = { delete_exam: true, edit_branding: true, access_master_storage: true, use_folder_actions: true, export_word: true, print_all: true, undo: true, view_absentees: true, view_room: true, view_accesskeys: true, view_database: true, manage_users: true };
+
+usersDB.forEach(u => { if (!u.rights) u.rights = u.role === 'admin' ? { ...DEFAULT_ADMIN_RIGHTS } : { ...DEFAULT_USER_RIGHTS }; });
+saveUsersDB();
+
+let currentUser = null;
+function getRights(user) {
+  if (!user) return {};
+  if (user.role === 'admin') return { ...DEFAULT_ADMIN_RIGHTS, ...(user.rights || {}) };
+  return { ...DEFAULT_USER_RIGHTS, ...(user.rights || {}) };
+}
+function hasRight(key) { if (!currentUser) return false; return !!getRights(currentUser)[key]; }
+
+const branding = Object.assign({ logoUrl: 'https://qs-igauge.blr1.cdn.digitaloceanspaces.com/GCU%20Logo%20New-01.png', logoDataUrl: '', institution: 'Garden City University', address: DEFAULT_ADDRESS, customInstitutions: [], collapsed: true, diaryHeaderLabel: 'Invigilation Diary' }, loadLS(LS.brand, {}));
+branding.campus = '';
+function saveBrand() { try { const copy = { ...branding }; if (copy.logoDataUrl && copy.logoDataUrl.length > 1_500_000) copy.logoDataUrl = ''; delete copy.collapsed; delete copy.campus; saveLS(LS.brand, copy); } catch (e) {} }
+
+const ROOMS = [
+  { name: 'Crystal Block Coursera LAB I',  shortName: 'COURSERA LAB-1', capacity: 50, allotment: 48, max: 48, block: 'Crystal block' },
+  { name: 'Crystal Block Coursera LAB II', shortName: 'COURSERA LAB-2', capacity: 50, allotment: 48, max: 48, block: 'Crystal block' },
+  { name: 'West Block No 20 (2nd Floor)',  shortName: 'ROOM NO. 20',    capacity: 57, allotment: 55, max: 55, block: 'West block' },
+  { name: 'West Block No 10 (1st Floor)',  shortName: 'ROOM NO. 10',    capacity: 30, allotment: 28, max: 28, block: 'West block' },
+  { name: 'Media Lab',                     shortName: 'MEDIA LAB',      capacity: 20, allotment: 18, max: 18, block: 'Media Block' }
+];
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+function toast(msg, kind) { const el = document.createElement('div'); el.className = 'toast ' + (kind || ''); el.textContent = msg; document.body.appendChild(el); setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; }, 2200); setTimeout(() => el.remove(), 2600); }
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function formatDate(iso) { if (!iso) return ''; const p = iso.split('-'); if (p.length !== 3) return iso; const [y,m,d] = p.map(Number); if (!y||!m||!d) return iso; return `${d} ${MONTHS[m-1]} ${y}`; }
+function formatDateShort(iso) { if (!iso) return ''; const p = iso.split('-'); if (p.length !== 3) return iso; const [y,m,d] = p.map(Number); if (!y||!m||!d) return iso; return `${d}.${m}.${y}`; }
+function formatTime(h) { if (!h) return ''; const [hh,m] = h.split(':').map(Number); if (isNaN(hh)||isNaN(m)) return h; const ap = hh>=12?'PM':'AM'; const h12 = hh%12||12; return `${String(h12).padStart(2,'0')}:${String(m).padStart(2,'0')} ${ap}`; }
+function formatTimeRange(a, b) { const x = formatTime(a), y = formatTime(b); if (x && y) return `${x} - ${y}`; return x || y || ''; }
+function parseManualTime(str) { if (!str) return ''; const s = String(str).trim().toUpperCase().replace(/\s+/g, ' '); const m = s.match(/^(\d{1,2})\s*:?\s*(\d{0,2})\s*(AM|PM)?$/); if (!m) return ''; let h = parseInt(m[1],10), mi = m[2]!=='' ? parseInt(m[2],10) : 0; const ap = m[3]; if (isNaN(h)||isNaN(mi)||mi<0||mi>59) return ''; if (ap) { if (h<1||h>12) return ''; h = h%12; if (ap==='PM') h += 12; } else { if (h<0||h>23) return ''; } return String(h).padStart(2,'0') + ':' + String(mi).padStart(2,'0'); }
+function to12hDisplay(h) { if (!h) return ''; const p = String(h).split(':'); const h24 = parseInt(p[0],10), m = parseInt(p[1],10); if (isNaN(h24)||isNaN(m)) return ''; const ap = h24>=12?'PM':'AM'; const h12 = h24%12||12; return `${String(h12).padStart(2,'0')}:${String(m).padStart(2,'0')} ${ap}`; }
+function parseFlexibleDate(str) { if (!str) return ''; const s = String(str).trim(); if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s; let m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/); if (m) { let [,d,mo,y] = m; if (y.length === 2) y = '20' + y; return `${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`; } m = s.match(/^(\d{1,2})[\s-]+([A-Za-z]+)[\s,-]+(\d{2,4})$/); if (m) { const mi = MONTHS.findIndex(x => x.toLowerCase().startsWith(m[2].toLowerCase().slice(0,3))); if (mi >= 0) { let y = m[3]; if (y.length === 2) y = '20' + y; return `${y}-${String(mi+1).padStart(2,'0')}-${m[1].padStart(2,'0')}`; } } return ''; }
+
+const _studentCache = new Map();
+function parseStudents(text) {
+  const key = String(text || ''); const cached = _studentCache.get(key); if (cached) return [...cached];
+  const out = []; const raw = key.replace(/\r\n?/g, '\n');
+  if (raw.trim()) {
+    const cleaned = raw.split('\n').map(line => line.replace(/^\s*\d{1,2}[.)]?\s+(?=\d{2}[A-Za-z]{2,6}\d)/, '')).join('\n');
+    const regRe = /\b(\d{2}[A-Za-z]{2,6}\d{2,5})\b/g; const matches = []; let m;
+    while ((m = regRe.exec(cleaned)) !== null) matches.push({ reg: m[1], start: m.index, end: m.index + m[1].length });
+    for (let i = 0; i < matches.length; i++) { const start = matches[i].end; const end = (i + 1 < matches.length) ? matches[i + 1].start : cleaned.length; let name = cleaned.slice(start, end).replace(/\t/g, ' ').replace(/^[\s,;:\-]+/, '').replace(/[\s,;:\-]+$/, '').replace(/\s+/g, ' ').trim(); out.push({ reg: matches[i].reg.toUpperCase(), name: name.toUpperCase() }); }
+  }
+  if (_studentCache.size > 300) _studentCache.clear();
+  _studentCache.set(key, out); return out;
+}
+
+function compressRegList(regs) {
+  if (!regs || regs.length === 0) return '';
+  const groups = {};
+  regs.forEach(r => {
+    const match = String(r).match(/^(.*?)(\d+)$/);
+    if (match) { const prefix = match[1]; const num = parseInt(match[2], 10); if (!groups[prefix]) groups[prefix] = []; groups[prefix].push(num); }
+    else { if (!groups['_other']) groups['_other'] = []; groups['_other'].push(r); }
+  });
+  const result = [];
+  for (const [prefix, nums] of Object.entries(groups)) {
+    if (prefix === '_other') { result.push(...nums); continue; }
+    nums.sort((a, b) => a - b);
+    let start = nums[0]; let prev = nums[0]; let ranges = [];
+    for (let i = 1; i < nums.length; i++) {
+      if (nums[i] === prev + 1) { prev = nums[i]; }
+      else { ranges.push(start === prev ? `${start}` : `${start}-${prev}`); start = nums[i]; prev = nums[i]; }
+    }
+    ranges.push(start === prev ? `${start}` : `${start}-${prev}`);
+    const formatted = ranges.map((r, idx) => idx === 0 ? prefix + r : r);
+    result.push(formatted.join(','));
+  }
+  return result.join(', ');
+}
+
+function extractProgrammeCode(regs) { for (const r of regs) { const m = String(r||'').match(/^\d{2}([A-Z]+)\d+/); if (m && m[1]) return m[1]; } return ''; }
+function splitStudentsByProgramme(exam) { const students = parseStudents(exam.studentsText); const manualCode = (exam.programmeCode || '').trim(); if (manualCode) return [{ code: manualCode, students }]; const groups = {}, order = []; for (const s of students) { const code = extractProgrammeCode([s.reg]) || 'OTHER'; if (!groups[code]) { groups[code] = []; order.push(code); } groups[code].push(s); } if (order.length === 0) return [{ code: '', students: [] }]; return order.map(code => ({ code, students: groups[code] })); }
+function groupConsecutiveByProgramme(students) { const groups = []; for (const s of students) { const code = extractProgrammeCode([s.reg]) || 'OTHER'; const last = groups[groups.length - 1]; if (last && last.code === code) last.students.push(s); else groups.push({ code, students: [s] }); } return groups; }
+function resolveStatementTitle(exam) { if (exam && (exam.title || '').trim()) return exam.title.trim().toUpperCase(); return ''; }
+
+function getUniqueSlots() {
+  const slots = new Set();
+  getVisibleExams().forEach(ex => { if (ex.dateISO) slots.add(`${ex.dateISO}|${ex.timeStart || ''}|${ex.timeEnd || ''}`); });
+  return Array.from(slots).map(s => { const [dateISO, timeStart, timeEnd] = s.split('|'); return { dateISO, timeStart, timeEnd, key: s }; }).sort((a, b) => a.key.localeCompare(b.key));
+}
+function sanitizeActiveSlot() { if (state.activeSlot === 'all') return; const slots = getUniqueSlots(); if (!slots.some(s => s.key === state.activeSlot)) { state.activeSlot = 'all'; } }
+function getVisibleExams() {
+  if (!currentUser) return [];
+  if (currentUser.role === 'admin') return state.exams;
+  return state.exams.filter(ex => !ex.owner || ex.owner === currentUser.username);
+}
+function getFilteredExams() {
+  let exams = getVisibleExams();
+  if (state.activeSlot !== 'all' && state.activeSlot) {
+    const [targetDate, targetStart, targetEnd] = state.activeSlot.split('|');
+    exams = exams.filter(ex => ex.dateISO === targetDate && (ex.timeStart || '') === targetStart && (ex.timeEnd || '') === targetEnd);
+  }
+  return exams;
+}
+
+let _roomIndexCache = null;
+function invalidateRoomIndex() { _roomIndexCache = null; }
+function getRoomIndex() { if (_roomIndexCache) return _roomIndexCache; const idx = new Map(); getVisibleExams().forEach(ex => { if (!ex.room) return; if (!idx.has(ex.room)) idx.set(ex.room, []); idx.get(ex.room).push(ex); }); _roomIndexCache = idx; return idx; }
+const _conflictCache = new Map();
+function invalidateConflictCache(examId) { if (examId) _conflictCache.delete(examId); else _conflictCache.clear(); }
+function doExamsOverlap(examA, examB) { if (!examA.dateISO || !examB.dateISO) return true; if (examA.dateISO !== examB.dateISO) return false; const startA = examA.timeStart || '00:00', endA = examA.timeEnd || '23:59'; const startB = examB.timeStart || '00:00', endB = examB.timeEnd || '23:59'; return startA < endB && endA > startB; }
+function getRoomConflicts(exam) { const cached = _conflictCache.get(exam.id); if (cached) return cached; const conflicts = []; if (!exam.room || !exam.dateISO) { _conflictCache.set(exam.id, conflicts); return conflicts; } const roomExams = getRoomIndex().get(exam.room) || []; for (const ex of roomExams) { if (ex.id === exam.id) continue; if (doExamsOverlap(exam, ex)) conflicts.push(ex); } _conflictCache.set(exam.id, conflicts); return conflicts; }
+function validateExam(exam, skipConflicts) { const warnings = []; const students = parseStudents(exam.studentsText); if (!exam.courseTitle || !exam.courseTitle.trim()) warnings.push('Course Title is empty.'); if (!exam.room || !exam.room.trim()) warnings.push('Room No. is not set.'); if (!exam.dateISO) warnings.push('Exam date is not set.'); const seen = {}, dup = []; for (const s of students) { if (seen[s.reg]) { if (!dup.includes(s.reg)) dup.push(s.reg); } seen[s.reg] = true; } if (dup.length) warnings.push(`Duplicate register number(s): ${dup.slice(0,3).join(', ')}${dup.length > 3 ? '…' : ''}`); if (exam.dateISO) { const today = new Date(); today.setHours(0,0,0,0); const d = new Date(exam.dateISO + 'T00:00:00'); if (!isNaN(d) && d < today) warnings.push('Exam date is in the past.'); } const abs = (exam.absenteesValue || '').trim(); if (abs && /^\d+$/.test(abs) && students.length > 0 && parseInt(abs,10) > students.length) warnings.push(`Absentees count (${abs}) > total students (${students.length}).`); if (!skipConflicts) { const conflicts = getRoomConflicts(exam); if (conflicts.length > 0) warnings.push(`⚠ Room conflict: already booked for ${conflicts.map(c => `${esc(c.courseTitle || 'Untitled')} (${formatTimeRange(c.timeStart, c.timeEnd)})`).join(', ')}`); } return warnings; }
+
+function findRoomByAnyName(name) { if (!name) return null; return ROOMS.find(r => r.name === name || r.shortName === name) || null; }
+function getRoomUsage(roomName, excludeExamId, targetExam) { let total = 0; const examsUsing = []; const roomExams = getRoomIndex().get(roomName) || []; for (const ex of roomExams) { if (ex.id === excludeExamId) continue; if (targetExam && !doExamsOverlap(ex, targetExam)) continue; const c = parseStudents(ex.studentsText).length; if (c > 0) { total += c; examsUsing.push({ exam: ex, count: c }); } } return { total, examsUsing }; }
+function getEffectiveMax(roomName, examId) { const room = ROOMS.find(r => r.name === roomName); if (!room) return 0; if (examId) { const exam = getVisibleExams().find(e => e.id === examId); if (exam && exam.customRoomMax && String(exam.customRoomMax).trim() !== '') { const val = parseInt(exam.customRoomMax, 10); if (!isNaN(val) && val > 0) return val; } } return room.max; }
+function getRoomBaseMax(roomName) { const room = ROOMS.find(r => r.name === roomName); return room ? room.max : 0; }
+function isRoomOverCapacity(exam) { const students = parseStudents(exam.studentsText); const room = findRoomByAnyName(exam.room); if (!room) return null; const roomMax = getEffectiveMax(room.name, exam.id); const others = getRoomUsage(room.name, exam.id, exam); const ownCount = students.length; const totalAfter = others.total + ownCount; if (totalAfter <= roomMax && ownCount <= roomMax) return null; return { room, ownCount, otherCount: others.total, totalAfter, over: Math.max(0, totalAfter - roomMax), ownOver: Math.max(0, ownCount - roomMax), otherExams: others.examsUsing, roomMax }; }
+function roomInfoMarkup(r, ownCount, examId) { const x = ROOMS.find(y => y.name === r); if (!x) return ''; const roomMax = getEffectiveMax(r, examId); const others = examId ? getRoomUsage(x.name, examId, getVisibleExams().find(e => e.id === examId)) : { total: 0, examsUsing: [] }; const own = ownCount || 0; const total = own + others.total; const over = total > roomMax; let text = `Capacity: <span class="pill">${x.capacity}</span> · Allotment: <span class="pill">${x.allotment}</span> · Max Allotment: <span class="pill">${roomMax}</span> · This exam: <span class="pill">${own}</span>`; if (others.total > 0) text += ` · Other exams: <span class="pill">${others.total}</span>`; text += ` · Total: <span class="pill">${total}/${roomMax}</span>`; if (over) text += ` · <b>⚠ OVER BY ${total - roomMax}</b>`; return `<div class="roomInfo${over ? ' over' : ''}">${text}</div>`; }
+
+const loginScreen = document.getElementById('loginScreen');
+const appRoot = document.getElementById('appRoot');
+const loginForm = document.getElementById('loginForm');
+const loginEmail = document.getElementById('loginEmail');
+const loginErr = document.getElementById('loginErr');
+
+function populateUserDropdown() {
+  const sel = document.getElementById('loginEmail');
+  sel.innerHTML = usersDB.map(u => `<option value="${esc(u.username)}">${esc(u.username)}${u.role === 'admin' ? ' (Admin)' : ''}</option>`).join('');
+  if (usersDB.length > 0) sel.value = usersDB[0].username;
+}
+
+function safeSession(a, v) { try { if (a === 'set') sessionStorage.setItem(LS.session, v); if (a === 'get') return sessionStorage.getItem(LS.session); if (a === 'del') sessionStorage.removeItem(LS.session); if (a === 'set-user') sessionStorage.setItem(LS.session + '_user', v); if (a === 'get-user') return sessionStorage.getItem(LS.session + '_user'); } catch (e) {} }
+
+function applyRightsToUI() {
+  const rights = getRights(currentUser);
+  const tabConfig = {
+    view_absentees: document.querySelector('.tab[data-view="absentees"]'),
+    view_room: document.querySelector('.tab[data-view="roomAllotment"]'),
+    view_accesskeys: document.querySelector('.tab[data-view="accessKeys"]'),
+    view_database: document.querySelector('.tab[data-view="database"]'),
+    manage_users: document.getElementById('tabUsers'),
+    access_master_storage: document.getElementById('tabFolders')
+  };
+  Object.entries(tabConfig).forEach(([key, el]) => { if (el) el.style.display = rights[key] ? 'flex' : 'none'; });
+  const undoBtn = document.getElementById('undoBtn'); if (undoBtn) undoBtn.style.display = rights.undo ? 'flex' : 'none';
+  document.querySelectorAll('button[data-act="moveFolder"]').forEach(btn => { btn.style.display = rights.use_folder_actions ? '' : 'none'; });
+  const viewRightsMap = { absentees: 'view_absentees', roomAllotment: 'view_room', accessKeys: 'view_accesskeys', database: 'view_database', users: 'manage_users', folders: 'access_master_storage' };
+  if (viewRightsMap[state.view] && !rights[viewRightsMap[state.view]]) { state.view = 'diary'; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === 'diary')); }
+}
+
+function enterApp() {
+  loginScreen.classList.add('hidden'); appRoot.classList.remove('hidden');
+  document.getElementById('userLabel').textContent = currentUser.username;
+  document.getElementById('userChip').title = currentUser.username;
+  document.getElementById('userAvatar').textContent = (currentUser.username.charAt(0)||'?').toUpperCase();
+  applyRightsToUI();
+  loadExamsFromStorage(); loadFoldersFromStorage(); renderEditor(); renderPreview(); updateBranding();
+}
+
+function logout() { safeSession('del'); safeSession('set-user', ''); appRoot.classList.add('hidden'); loginScreen.classList.remove('hidden'); loginErr.classList.add('hidden'); populateUserDropdown(); loginEmail.focus(); }
+loginForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const username = loginEmail.value;
+  if (!username) { showLoginError('Please select a user.'); return; }
+  const user = usersDB.find(u => u.username === username);
+  if (!user) { showLoginError('User not found.'); return; }
+  loginErr.classList.add('hidden');
+  currentUser = user;
+  safeSession('set','active');
+  safeSession('set-user', username);
+  enterApp();
+});
+document.getElementById('logoutBtn').addEventListener('click', () => { if (confirm('Log out?')) logout(); });
+function showLoginError(msg) { loginErr.textContent = msg; loginErr.classList.remove('hidden'); }
+
+const state = { exams: [], folders: [], view: 'diary', search: '', lettersOn: true, viewMode: loadLS(LS.viewMode, 'detailed') || 'detailed', activeSlot: 'all', database: {}, accessKeys: {} };
+function saveViewMode() { saveLS(LS.viewMode, state.viewMode); }
+const UNDO = { stack: [], max: 30 };
+function snapshot() { try { UNDO.stack.push(JSON.stringify(state.exams)); if (UNDO.stack.length > UNDO.max) UNDO.stack.shift(); } catch (e) {} }
+let _renderTimer = null, _snapshotTimer = null;
+function scheduleRender(d) { if (_renderTimer) clearTimeout(_renderTimer); _renderTimer = setTimeout(() => { _renderTimer = null; renderPreview(); }, d || 400); }
+function scheduleSnapshot(d) { if (_snapshotTimer) clearTimeout(_snapshotTimer); _snapshotTimer = setTimeout(() => { _snapshotTimer = null; snapshot(); }, d || 500); }
+function undo() { if (!hasRight('undo')) { toast('⛔ No undo permission.', 'error'); return; } if (!UNDO.stack.length) { toast('Nothing to undo', 'info'); return; } const last = UNDO.stack.pop(); try { state.exams = JSON.parse(last); invalidateRoomIndex(); invalidateConflictCache(); sanitizeActiveSlot(); renderEditor(); renderPreview(); saveExams(); toast('Undone', 'success'); } catch (e) {} }
+function newExam() { return { id: uid(), title: '', dateISO: '', timeStart: '', timeEnd: '', room: '', courseTitle: '', courseCode: '', programmeCode: '', regOverride: '', studentsText: '', collapsed: false, absenteesValue: '', presentValue: '', year: '2026', rowsPerPage: DEFAULT_ROWS_PER_PAGE, extraBlankRows: DEFAULT_EXTRA_ROWS, customRoomMax: '', selected: false, owner: currentUser ? currentUser.username : null }; }
+
+function saveExams() {
+  const ok = saveLS(LS.exams, state.exams);
+  const st = document.getElementById('saveStatus');
+  if (st) {
+    st.textContent = ok ? '✓ saved' : '⚠ save failed';
+    st.style.color = ok ? '#22c55e' : '#ef4444';
+    setTimeout(() => { st.textContent = ok ? 'saved' : 'save failed'; st.style.color = '#94a3b8'; }, 1500);
+  }
+  if (!ok) console.error('[saveExams] localStorage write failed');
+}
+function saveFolders() {
+  const ok = saveLS(LS.folders, state.folders);
+  if (!ok) console.error('[saveFolders] localStorage write failed');
+  return ok;
+}
+function loadExamsFromStorage() {
+  const raw = loadLS(LS.exams, null);
+  if (raw && Array.isArray(raw) && raw.length > 0) { state.exams = raw; console.log('[load] Loaded', raw.length, 'exams'); }
+  else { state.exams = [newExam()]; console.log('[load] No saved exams — starting fresh'); }
+  invalidateRoomIndex(); invalidateConflictCache(); sanitizeActiveSlot();
+}
+function loadFoldersFromStorage() {
+  const raw = loadLS(LS.folders, null);
+  if (raw && Array.isArray(raw)) { state.folders = raw; console.log('[load] Loaded', raw.length, 'folders'); }
+  else { state.folders = []; console.log('[load] No saved folders'); }
+}
+
+function activeLogoSrc() { return branding.logoDataUrl || branding.logoUrl || ''; }
+function logoMarkup(size, fb) { const src = activeLogoSrc(); if (!src) return `<span style="font-size:26px;">${fb}</span>`; return `<img src="${esc(src)}" alt="logo" onerror="this.style.display='none';this.parentNode.innerHTML='<span style=&quot;font-size:26px;&quot;>${fb}</span>';" style="max-width:${size};max-height:${size};width:auto;height:auto;object-fit:contain;">`; }
+function allInstitutions() { const list = ['Garden City University','Garden City University — School of Sciences','Garden City University — School of Management Studies','Garden City University — School of Commerce','Garden City University — School of Physiotherapy']; branding.customInstitutions.forEach(n => { if (!list.includes(n)) list.push(n); }); if (branding.institution && !list.includes(branding.institution)) list.unshift(branding.institution); return list; }
+function updateBranding() { document.getElementById('loginLogoWrap').innerHTML = logoMarkup('100px', '🎓'); document.getElementById('loginOrgName').textContent = branding.institution || ''; document.getElementById('loginOrgAddr').textContent = branding.address || ''; document.getElementById('topLogoBox').innerHTML = logoMarkup('100%', '🎓'); document.getElementById('topOrgName').textContent = branding.institution || 'Invigilator Diary'; }
+function timeField(fieldName, value, examId) { const lbl = fieldName === 'timeStart' ? 'Start Time' : 'End Time'; return `<div class="timeFieldWrap"><div class="timeLabelRow"><span class="lbl">${lbl}</span></div><input type="text" class="manualInput" data-manual-time="${fieldName}" data-exam-id="${examId}" value="${esc(to12hDisplay(value))}" placeholder="e.g. 11:30 AM" spellcheck="false" autocomplete="off"></div>`; }
+function splitCSVLine(line) { const out = []; let cur = ''; let inQ = false; for (let i = 0; i < line.length; i++) { const ch = line[i]; if (ch === '"') { if (inQ && line[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; } else if (ch === ',' && !inQ) { out.push(cur); cur = ''; } else cur += ch; } out.push(cur); return out; }
+function downloadExamTemplate() { const header = 'Diary Title,Date (DD-MM-YYYY),Start Time (HH:MM AM/PM),End Time (HH:MM AM/PM),Room No,Course Title,Course Code,Programme Code,Students (RegNo Name | RegNo Name)'; const csv = '\ufeff' + header + '\n'; const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'exam-data-template.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('Blank template downloaded', 'success'); }
+function importExamsCSV(text) { const clean = String(text || '').replace(/^\ufeff/, '').replace(/\r\n?/g, '\n'); const lines = clean.split('\n').filter(l => l.trim()); if (lines.length === 0) return []; const rows = lines.map(splitCSVLine); let startIdx = 0; const probe = rows[0].join(' ').toLowerCase(); if (/diary|title|date|course|room|time|student/.test(probe) && !/\d{2}[-\/.]\d{2}[-\/.]\d{2,4}/.test(probe)) startIdx = 1; const exams = []; for (let i = startIdx; i < rows.length; i++) { const r = rows[i].map(c => String(c || '').trim()); if (r.every(c => !c)) continue; const [title, dateStr, startStr, endStr, room, courseTitle, courseCode, progCode, studentsStr] = r; const exam = newExam(); if (title) exam.title = title.toUpperCase(); if (dateStr) exam.dateISO = parseFlexibleDate(dateStr); if (startStr) exam.timeStart = parseManualTime(startStr); if (endStr) exam.timeEnd = parseManualTime(endStr); if (room) exam.room = room; if (courseTitle) exam.courseTitle = courseTitle.toUpperCase(); if (courseCode) exam.courseCode = courseCode.toUpperCase(); if (progCode) exam.programmeCode = progCode.toUpperCase(); if (studentsStr) { const list = studentsStr.split(/[|;]/).map(s => s.trim()).filter(Boolean); exam.studentsText = list.join('\n').toUpperCase(); } if (exam.title || exam.dateISO || exam.room || exam.courseTitle || exam.studentsText) exams.push(exam); } return exams; }
+function handleExamImportFile(file) { if (!file) return; const reader = new FileReader(); reader.onload = () => { const imported = importExamsCSV(reader.result); if (imported.length === 0) { toast('No exams found', 'error'); return; } const hasData = getVisibleExams().length > 1 || (getVisibleExams()[0] && (getVisibleExams()[0].courseTitle || getVisibleExams()[0].studentsText)); let mode = 'replace'; if (hasData) { const choice = confirm(`Found ${imported.length} exam(s).\n\nOK = REPLACE\nCancel = APPEND`); mode = choice ? 'replace' : 'append'; } snapshot(); if (mode === 'replace') { state.exams = state.exams.filter(ex => ex.owner !== currentUser.username); state.exams = state.exams.concat(imported); } else state.exams = state.exams.concat(imported); invalidateRoomIndex(); invalidateConflictCache(); sanitizeActiveSlot(); saveExams(); renderEditor(); renderPreview(); toast(`Imported ${imported.length} exam(s)`, 'success'); }; reader.readAsText(file); }
+
+const _openStudentPanels = new Set();
+const _studentPanelSearch = {};
+function renderStudentPanel(exam) { const all = parseStudents(exam.studentsText); const q = (_studentPanelSearch[exam.id] || '').toLowerCase().trim(); const filtered = q ? all.filter(s => s.reg.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)) : all; return `<div class="studentPanel"><div class="spHead"><input type="text" class="spSearch" data-exam-id="${exam.id}" placeholder="Search..." value="${esc(_studentPanelSearch[exam.id] || '')}" autocomplete="off"><span class="mini-cnt">${filtered.length} / ${all.length}</span><button class="btn subtle mini" data-f-act="closeStudentSearch" data-exam-id="${exam.id}" type="button">Close</button></div><div class="spList" data-exam-id="${exam.id}">${filtered.length === 0 ? '<div class="emptySmall">No match.</div>' : filtered.map(s => `<div class="row"><div class="sReg">${esc(s.reg)}</div><div class="sName">${esc(s.name)}</div><button class="sDel" data-del-reg="${esc(s.reg)}" data-exam-id="${esc(exam.id)}">✕</button></div>`).join('')}</div></div>`; }
+function brandingCard() { const src = activeLogoSrc(); const isData = !!branding.logoDataUrl; const options = allInstitutions().map(n => `<option value="${esc(n)}" ${n===branding.institution?'selected':''}>${esc(n)}</option>`).join(''); const cls = branding.collapsed ? 'hidden' : ''; const chev = branding.collapsed ? '▸' : '▾'; return `<div class="card"><div class="card-head" data-toggle="branding"><span class="badge">🎓</span><span class="cardTitle">Institution &amp; Logo — ${esc(branding.institution || 'Not set')}</span><span class="chev">${chev}</span></div><div class="card-body ${cls}"><div class="logoPreview"><div class="box">${logoMarkup('100%', '🎓')}</div><div class="meta"><b>${esc(branding.institution || 'No institution name')}</b>${src ? `<code style="font-size:10.5px;background:#eef2ff;color:#4338ca;padding:2px 6px;border-radius:5px;">${isData ? 'Uploaded file' : esc(src).slice(0,50)+'…'}</code>` : `<span style="color:#b91c1c;font-weight:600;">No logo set</span>`}</div></div><label class="full">Institution Name <select id="instSelect">${options}<option value="__add__">➕ Add new institution…</option></select></label><div id="newInstRow" class="hidden"><label class="full">New Institution Name <input id="newInstInput" placeholder="e.g. St. Xavier's College"></label><div class="rowBtns" style="margin-top:8px;"><button class="btn primary" id="saveInstBtn" type="button">Save</button><button class="btn subtle" id="cancelInstBtn" type="button">Cancel</button></div></div><label class="full">Diary Header Label <input data-b="diaryHeaderLabel" value="${esc(branding.diaryHeaderLabel)}"></label><label class="full">Address <input data-b="address" value="${esc(branding.address)}"></label><label class="full">Logo URL <input data-b="logoUrl" value="${esc(branding.logoUrl)}"></label><label class="full">…or Upload Logo <input type="file" id="logoFile" accept="image/*"></label><div class="rowBtns"><button class="btn subtle" data-b-act="applyUrl">Apply URL</button><button class="btn subtle" data-b-act="clearLogo">Remove Logo</button><button class="btn subtle" data-b-act="resetAddr">Reset Address</button><button class="btn subtle" data-b-act="deleteInst">Delete Current Name</button></div></div></div>`; }
+
+function slotFilterBarHTML() {
+  sanitizeActiveSlot();
+  const slots = getUniqueSlots();
+  let rowsHtml = `<tr class="${state.activeSlot === 'all' ? 'active-slot-row' : ''}" data-slot="all"><td colspan="2"><b>All Slots / Programs</b></td><td>${getVisibleExams().length}</td><td>${getVisibleExams().reduce((sum, ex) => sum + parseStudents(ex.studentsText).length, 0)}</td></tr>`;
+  slots.forEach(s => {
+    const slotExams = getVisibleExams().filter(ex => ex.dateISO === s.dateISO && (ex.timeStart || '') === s.timeStart && (ex.timeEnd || '') === s.timeEnd);
+    const totalStudents = slotExams.reduce((sum, ex) => sum + parseStudents(ex.studentsText).length, 0);
+    rowsHtml += `<tr class="${state.activeSlot === s.key ? 'active-slot-row' : ''}" data-slot="${esc(s.key)}"><td>${esc(formatDateShort(s.dateISO))}</td><td>${esc(formatTimeRange(s.timeStart, s.timeEnd))}</td><td>${slotExams.length}</td><td>${totalStudents}</td></tr>`;
+  });
+  return `<div class="slotTableWrap"><div class="slotTableHeader">Filter View by Exam Slot (Click to Select)</div><table class="slotTable"><thead><tr><th>Date</th><th>Time Slot</th><th>Exams</th><th>Students</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
+}
+function viewModeBar() { return `<div class="viewModeBar"><button class="viewModeBtn ${state.viewMode === 'overview' ? 'active' : ''}" data-viewmode="overview">📊 Overview</button><button class="viewModeBtn ${state.viewMode === 'detailed' ? 'active' : ''}" data-viewmode="detailed">📝 Detailed Editor</button></div>`; }
+function dashboardStats(exams) { let totalStudents = 0, overCapCount = 0, conflictCount = 0; exams.forEach(ex => { totalStudents += parseStudents(ex.studentsText).length; if (isRoomOverCapacity(ex)) overCapCount++; if (getRoomConflicts(ex).length > 0) conflictCount++; }); return `<div class="dashboard"><div class="statCard s1"><div class="n">${exams.length}</div><div class="l">Exams</div></div><div class="statCard s2"><div class="n">${totalStudents}</div><div class="l">Students</div></div><div class="statCard s3"><div class="n">${conflictCount}</div><div class="l">Conflicts</div></div><div class="statCard s4"><div class="n">${overCapCount}</div><div class="l">Over Cap</div></div></div>`; }
+function compactExamCard(ex, i) { const students = parseStudents(ex.studentsText); const overInfo = isRoomOverCapacity(ex); const conflicts = getRoomConflicts(ex); const warnings = validateExam(ex, false); const roomShort = (() => { const r = findRoomByAnyName(ex.room); return r ? r.shortName : (ex.room || '—'); })(); const statusClass = overInfo ? 'over' : conflicts.length ? 'conflict' : 'ok'; return `<div class="compactCard ${statusClass}" data-compact-id="${ex.id}"><div class="ccTop"><div class="ccNum">${i + 1}</div><div class="ccTitle"><div class="ccCourse">${esc((ex.courseTitle || 'Untitled Exam').toUpperCase())}</div><div class="ccSubtitle">${esc((ex.title || '—').toUpperCase())}</div></div><div class="ccActions"><button data-act="excel" title="Save Excel">📊</button><button data-act="del" title="Delete" class="del">✕</button></div></div><div class="ccBadges"><span class="ccBadge room">🏫 ${esc(roomShort)}</span>${ex.dateISO ? `<span class="ccBadge date">📅 ${esc(formatDateShort(ex.dateISO))}</span>` : ''}${ex.timeStart || ex.timeEnd ? `<span class="ccBadge time">🕐 ${esc(formatTimeRange(ex.timeStart, ex.timeEnd))}</span>` : ''}<span class="ccBadge stu">👥 ${students.length}</span>${overInfo ? `<span class="ccBadge over">⚠ OVER ${overInfo.over}</span>` : ''}${conflicts.length > 0 ? `<span class="ccBadge conflict">⚠ ${conflicts.length} CONFLICT</span>` : ''}${warnings.length > 0 && !overInfo && conflicts.length === 0 ? `<span class="ccBadge warn">⚠ ${warnings.length}</span>` : ''}</div></div>`; }
+function renderOverviewMode() { const filteredExams = getFilteredExams(); const search = (state.search || '').trim().toLowerCase(); const visible = filteredExams.filter(ex => { if (!search) return true; const hay = [ex.courseTitle, ex.courseCode, ex.room, ex.title, ex.studentsText].join(' ').toLowerCase(); return hay.includes(search); }); const cardsHtml = visible.length === 0 ? `<div class="empty" style="padding:30px;text-align:center;font-size:13px;">No exams match this slot.</div>` : visible.map(ex => { const realIdx = state.exams.indexOf(ex); return `<div style="display:flex; gap:8px; align-items:center;"><input type="checkbox" data-chk="${ex.id}" ${ex.selected ? 'checked' : ''} style="width:20px; height:20px; cursor:pointer;">${compactExamCard(ex, realIdx)}</div>`; }).join(''); 
+  document.getElementById('editor').innerHTML = `
+    <div class="examImportBar"><div class="row"><button class="ibtn" id="downloadTplBtn">📥 Download Template</button><button class="ibtn primary" id="importExamsBtn">📤 Upload &amp; Import</button></div></div>
+    ${slotFilterBarHTML()}
+    ${viewModeBar()}
+    ${dashboardStats(filteredExams)}
+    <div class="compactList">${cardsHtml}</div>
+    <div class="rowBtns" style="margin-top:12px;">
+      <button class="btn primary" data-act="add">+ Add Exam</button>
+      ${hasRight('use_folder_actions') ? `<button class="btn folder" data-act="moveFolder">📁 Move to Folder</button>` : ''}
+      <button class="btn subtle" data-act="autoAssign">⚡ Auto-Assign Rooms</button>
+      <button class="btn subtle" data-act="clear">Reset All</button>
+    </div>`; 
+}
+function compactSettingsHTML(ex) { return `<div class="examSettings"><div class="examSettingsItem"><label>Year</label><input data-f="year" value="${esc(ex.year || '2026')}"></div><div class="examSettingsItem"><label>Rows/Pg</label><input data-f="rowsPerPage" type="number" min="1" max="40" value="${esc(ex.rowsPerPage || DEFAULT_ROWS_PER_PAGE)}"></div><div class="examSettingsItem"><label>Room Max Override</label><input data-f="customRoomMax" type="number" min="1" max="100" value="${esc(ex.customRoomMax || '')}" placeholder="blank = default"></div><div class="examSettingsItem"><label>Extra Rows</label><input data-f="extraBlankRows" type="number" min="0" max="40" value="${esc(ex.extraBlankRows !== undefined ? ex.extraBlankRows : DEFAULT_EXTRA_ROWS)}"></div></div>`; }
+function examCard(ex, i, warnings) {
+  const groups = splitStudentsByProgramme(ex);
+  const groupHint = groups.length > 1 ? `<div class="hint info">Multi-programme detected — <b>${groups.length} programme sections</b>.</div>` : '';
+  const warnBadge = warnings.length ? `<span class="warnBadge">⚠ ${warnings.length}</span>` : '';
+  const overInfo = isRoomOverCapacity(ex);
+  const overBadge = overInfo ? `<span class="overBadge">🔴 OVER</span>` : '';
+  const studentCount = parseStudents(ex.studentsText).length;
+  const overBanner = overInfo ? `<div class="overCapBanner"><span class="icn">⚠</span><div class="msg">Room Capacity Exceeded — ${overInfo.totalAfter}/${overInfo.roomMax} (over by ${overInfo.over})</div><button data-f-act="fixCapacity" data-exam-id="${ex.id}" type="button">Fix Now →</button></div>` : '';
+  const isPanelOpen = _openStudentPanels.has(ex.id);
+  const studentPanel = isPanelOpen ? renderStudentPanel(ex) : '';
+  const searchBtnLabel = isPanelOpen ? '🔍 Close Search' : '🔍 Search / Delete';
+  const conflicts = getRoomConflicts(ex);
+  const conflictBanner = conflicts.length > 0 ? `<div class="overCapBanner" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);"><span class="icn">⚠</span><div class="msg">Room Conflict — already booked for: <b>${conflicts.map(c => `${esc(c.courseTitle || 'Untitled')} (${formatTimeRange(c.timeStart, c.timeEnd)})`).join(', ')}</b></div></div>` : '';
+  return `<div class="card exam ${overInfo ? 'overCapacity' : ''}" data-id="${ex.id}" draggable="false"><div class="card-head"><span class="dragHandle" draggable="true">⋮⋮</span><span class="badge">${i + 1}</span><span class="cardTitle">${esc((ex.courseTitle || 'Untitled Exam').toUpperCase())}${overBadge}${warnBadge}</span><div class="btns"><button data-act="toggle">${ex.collapsed ? '▸' : '▾'}</button><button data-act="clone" title="Clone">📋</button>${hasRight('export_word') ? `<button data-act="word" title="Word">📝</button>` : ''}${hasRight('delete_exam') ? `<button data-act="del">✕</button>` : ''}</div></div><div class="card-body ${ex.collapsed?'hidden':''}">${overBanner}${conflictBanner}${compactSettingsHTML(ex)}${warnings.length ? `<div class="warnBlock"><span class="wt">⚠ Warnings</span><ul>${warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></div>` : ''}<label class="full">Diary Title <input data-f="title" value="${esc(ex.title)}" placeholder="e.g. Invigilation Diary-PG II SEM"></label><div class="grid2"><label class="full">Date <input type="date" data-f="dateISO" value="${esc(ex.dateISO)}"></label><div>${timeField('timeStart', ex.timeStart, ex.id)}</div><div>${timeField('timeEnd', ex.timeEnd, ex.id)}</div></div><label class="full">Room No.<select data-f="room" class="roomSelect"><option value="">— Pick a room —</option>${ROOMS.map(r => `<option value="${esc(r.name)}" ${r.name===ex.room?'selected':''}>${esc(r.name)} · Max ${r.max}</option>`).join('')}<option value="__custom__" ${ex.room && !ROOMS.some(r=>r.name===ex.room)?'selected':''}>➕ Custom</option></select><input type="text" data-f="room" class="roomCustom ${ex.room && !ROOMS.some(r=>r.name===ex.room)?'':'hidden'}" value="${esc(ex.room && !ROOMS.some(r=>r.name===ex.room)?ex.room:'')}" placeholder="Type room name">${roomInfoMarkup(ex.room, studentCount, ex.id)}</label><label class="full">Course Title <input data-f="courseTitle" value="${esc(ex.courseTitle)}"></label><div class="grid2"><label>Course Code <input data-f="courseCode" value="${esc(ex.courseCode)}"></label><label>Reg. Nos. Allotted <input data-f="regOverride" value="${esc(ex.regOverride)}" placeholder="auto"></label></div><label class="full">Students — one per line: <code>RegNo Name</code> <textarea data-f="studentsText" rows="7" placeholder="25MSBT101 Manishka Nandy">${esc(ex.studentsText)}</textarea></label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><button class="btn subtle mini" data-f-act="csv" type="button">📁 Import CSV</button><button class="btn subtle mini" data-f-act="toggleStudentSearch" data-exam-id="${ex.id}" type="button">${searchBtnLabel}</button><span class="hint" style="flex:1;min-width:120px;">${studentCount} student(s)</span></div>${studentPanel}${groupHint}<div class="grid2"><label>Absentees Value <input data-f="absenteesValue" value="${esc(ex.absenteesValue)}" placeholder="e.g. Nil"></label><label>Present Value <input data-f="presentValue" value="${esc(ex.presentValue)}" placeholder="blank"></label></div></div></div>`;
+}
+function renderDetailedMode() { const filteredExams = getFilteredExams(); const search = (state.search || '').trim().toLowerCase(); const visibleExams = filteredExams.filter(ex => { if (!search) return true; const hay = [ex.courseTitle, ex.courseCode, ex.room, ex.title, ex.studentsText].join(' ').toLowerCase(); return hay.includes(search); }); const examCardsHtml = visibleExams.length === 0 ? `<div class="empty" style="padding:20px;text-align:center;font-size:13px;">No exams match this slot.</div>` : visibleExams.map(ex => { const realIdx = state.exams.indexOf(ex); return examCard(ex, realIdx, validateExam(ex, true)); }).join(''); const brandingBlock = hasRight('edit_branding') ? brandingCard() : ''; document.getElementById('editor').innerHTML = `<div class="examImportBar"><div class="row"><button class="ibtn" id="downloadTplBtn">📥 Download Template</button><button class="ibtn primary" id="importExamsBtn">📤 Upload &amp; Import</button></div></div>${slotFilterBarHTML()}${viewModeBar()}${brandingBlock}${examCardsHtml}<div class="rowBtns"><button class="btn primary" data-act="add">+ Add Exam</button>${hasRight('use_folder_actions') ? `<button class="btn folder" data-act="moveFolder">📁 Move to Folder</button>` : ''}<button class="btn subtle" data-act="clear">Reset All</button></div>`; }
+function renderDatabaseFolders() { let html = ''; for (const [batch, programs] of Object.entries(state.database)) { html += `<div class="batch-folder"><div class="batch-header" onclick="this.nextElementSibling.classList.toggle('open')">📁 ${batch} Batch <span>▼</span></div><div class="batch-body">${Object.entries(programs).map(([prog, students]) => `<div class="program-folder"><div class="program-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">📄 ${prog} (${students.length})</div><div class="student-list" style="display:none;">${students.map(s => `${s.reg} - ${s.name}`).join('<br>')}</div></div>`).join('')}</div></div>`; } return html || '<p style="font-size:12px;color:#94a3b8;">No database uploaded yet.</p>'; }
+function renderDatabaseMode() { if (!hasRight('view_database')) { document.getElementById('editor').innerHTML = `<div class="card"><div class="card-body" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">⛔ No access.</div></div>`; return; } document.getElementById('editor').innerHTML = `<div class="card"><div class="card-head">🗄️ Student Database</div><div class="card-body"><p style="font-size:12px; color:#64748b;">Upload CSV (RegNo, Name) to populate batch folders.</p><button class="btn primary" onclick="document.getElementById('hiddenDbInput').click()">📤 Upload Student DB</button><div style="margin-top:10px;">${renderDatabaseFolders()}</div></div></div>`; }
+function renderAccessKeysMode() { 
+  if (!hasRight('view_accesskeys')) { 
+    document.getElementById('editor').innerHTML = `<div class="card"><div class="card-body" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">⛔ No access.</div></div>`; 
+    return; 
+  } 
+  document.getElementById('editor').innerHTML = `
+    <div class="card">
+      <div class="card-head">🔑 Upload Access Keys</div>
+      <div class="card-body">
+        <p style="font-size:12px; color:#64748b;">Upload Hall Ticket Excel/CSV files. The system will merge and map them to the correct room.</p>
+        <button class="btn primary" onclick="document.getElementById('hiddenKeyInput').click()">📤 Upload Access Keys</button>
+        <div class="hint info" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>Parsed Keys: ${Object.keys(state.accessKeys).length} found.</span>
+          ${Object.keys(state.accessKeys).length > 0 ? `<button class="btn danger mini" id="resetAccessKeysBtn" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; margin-left:auto; padding:4px 10px;">🗑 Reset Access Keys</button>` : ''}
+        </div>
+        <div class="hint warn" style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+          <span>Clean up old keys for past exams.</span>
+          <button class="btn subtle mini" id="cleanupAccessKeysBtn">🧹 Auto-Clean Old Keys</button>
+        </div>
+      </div>
+    </div>`; 
+}
+function renderUsersMode() {
+  if (!hasRight('manage_users')) {
+    document.getElementById('editor').innerHTML = `<div class="card"><div class="card-body" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;">⛔ You don't have permission to manage users.</div></div>`;
+    return;
+  }
+  let rows = usersDB.map(u => {
+    const rights = getRights(u);
+    const rightCount = Object.values(rights).filter(Boolean).length;
+    const isAdmin = u.role === 'admin';
+    return `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:10px 8px;font-weight:600;">${esc(u.username)}</td><td style="padding:10px 8px;">${isAdmin ? '<span class="badge" style="background:#4f46e5;">Admin</span>' : '<span class="badge" style="background:#64748b;">User</span>'}</td><td style="padding:10px 8px;text-align:center;">${rightCount}/${ALL_RIGHTS.length}</td><td style="padding:10px 8px;text-align:right;"><button class="btn subtle mini" onclick="editUserRights('${esc(u.username)}')">⚙ Rights</button></td></tr>`;
+  }).join('');
+  document.getElementById('editor').innerHTML = `<div class="card"><div class="card-head">👥 User Management</div><div class="card-body"><p style="font-size:12px; color:#64748b;">Assign specific permissions to each user. Only admins can manage rights.</p><div style="margin-top:10px;"><table style="width:100%; border-collapse:collapse; font-size:13px;"><thead><tr style="border-bottom:2px solid #cbd5e1;"><th style="text-align:left; padding:8px;">Username</th><th style="text-align:left; padding:8px;">Role</th><th style="text-align:center; padding:8px;">Rights</th><th style="text-align:right; padding:8px;">Action</th></tr></thead><tbody>${rows}</tbody></table></div></div></div><div id="rightsEditorMount"></div>`;
+}
+window.removeUser = function(u) {
+  if (!hasRight('manage_users')) { toast('⛔ No permission.', 'error'); return; }
+  if (u === 'MohanRaj') return;
+  if (!confirm(`Remove user ${u}?`)) return;
+  usersDB = usersDB.filter(x => x.username !== u);
+  saveUsersDB(); renderUsersMode(); toast('User removed', 'success');
+};
+window.editUserRights = function(username) {
+  if (!hasRight('manage_users')) { toast('⛔ No permission.', 'error'); return; }
+  const user = usersDB.find(x => x.username === username);
+  if (!user) return;
+  const isAdmin = user.role === 'admin';
+  const rights = getRights(user);
+  const rightsHtml = ALL_RIGHTS.map(r => {
+    const checked = rights[r.key] ? 'checked' : '';
+    const disabled = (isAdmin && r.key === 'manage_users') ? 'disabled' : '';
+    return `<label style="display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; cursor:${disabled?'not-allowed':'pointer'}; background:${checked?'#f5f3ff':'#fff'}; margin-bottom:6px;"><input type="checkbox" data-right-key="${r.key}" ${checked} ${disabled} style="margin-top:2px; width:16px; height:16px; accent-color:#7c3aed;"><div style="flex:1;"><div style="font-weight:700; font-size:13px; color:#0f172a;">${r.label}</div><div style="font-size:11.5px; color:#64748b; margin-top:2px;">${r.desc}</div></div></label>`;
+  }).join('');
+  document.getElementById('rightsEditorMount').innerHTML = `<div class="modal-overlay" id="rightsEditorOverlay" style="position:fixed; inset:0; z-index:700; background:rgba(15,23,42,.6); display:grid; place-items:center; padding:20px;"><div class="modal" style="max-width:640px; background:#fff; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; max-height:92vh;"><div class="modal-head" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);"><span class="icon">⚙</span><div><h3>Rights for ${esc(username)}</h3><p>${isAdmin ? 'Admin — all rights granted by default' : 'Toggle permissions'}</p></div></div><div class="modal-body" style="padding:18px 20px; overflow-y:auto;"><div style="margin-bottom:12px; display:flex; gap:8px; flex-wrap:wrap;"><button class="btn subtle mini" onclick="toggleAllRights(true)">✓ Select All</button><button class="btn subtle mini" onclick="toggleAllRights(false)">✕ Clear All</button><button class="btn subtle mini" onclick="resetRights('${isAdmin?'admin':'user'}')">↺ Reset Defaults</button></div><div id="rightsList">${rightsHtml}</div></div><div class="modal-foot" style="padding:14px 20px; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; background:#f8fafc;"><button class="btn subtle" onclick="closeRightsEditor()">Cancel</button><button class="btn primary" onclick="saveUserRights('${esc(username)}')">💾 Save Rights</button></div></div></div>`;
+};
+window.toggleAllRights = function(checked) { document.querySelectorAll('#rightsList input[data-right-key]').forEach(chk => { if (!chk.disabled) chk.checked = checked; }); };
+window.resetRights = function(role) { const defaults = role === 'admin' ? DEFAULT_ADMIN_RIGHTS : DEFAULT_USER_RIGHTS; document.querySelectorAll('#rightsList input[data-right-key]').forEach(chk => { chk.checked = !!defaults[chk.dataset.rightKey]; }); };
+window.closeRightsEditor = function() { const el = document.getElementById('rightsEditorMount'); if (el) el.innerHTML = ''; };
+window.saveUserRights = function(username) {
+  const user = usersDB.find(x => x.username === username);
+  if (!user) return;
+  const newRights = {};
+  document.querySelectorAll('#rightsList input[data-right-key]').forEach(chk => { newRights[chk.dataset.rightKey] = chk.checked; });
+  user.rights = newRights; saveUsersDB(); closeRightsEditor(); renderUsersMode();
+  toast('Rights saved', 'success');
+  if (currentUser && currentUser.username === username) { currentUser = user; applyRightsToUI(); }
+};
+
+function renderEditor() {
+  if (state.view === 'database') { renderDatabaseMode(); return; }
+  if (state.view === 'accessKeys') { renderAccessKeysMode(); return; }
+  if (state.view === 'users') { renderUsersMode(); return; }
+  if (state.view === 'folders') { openMasterStorage(); return; }
+  if (state.viewMode === 'overview') renderOverviewMode();
+  else renderDetailedMode();
+}
+
+function refreshCardMeta(exam) { const card = document.querySelector(`.exam[data-id="${exam.id}"]`); if (!card) return; const titleEl = card.querySelector('.cardTitle'); if (!titleEl) return; const newTitle = (exam.courseTitle || 'Untitled Exam').toUpperCase(); const textNode = Array.from(titleEl.childNodes).find(n => n.nodeType === 3); if (textNode) { if (textNode.nodeValue !== newTitle) textNode.nodeValue = newTitle; } else titleEl.insertBefore(document.createTextNode(newTitle), titleEl.firstChild); }
+function pageHeader(exam, withLetters) { const addrLine = withLetters && branding.address ? `<p class="addr">${esc(branding.address)}</p>` : ''; const diaryLine = branding.diaryHeaderLabel ? `<p class="diaryLabel">${esc(branding.diaryHeaderLabel)}</p>` : ''; const yearValue = exam.year || '2026'; if (!withLetters) return `<div class="pageHeader"><div class="inst" style="text-align:left;">${addrLine}${diaryLine}</div><div class="yearBox">${esc(yearValue)}</div></div>`; return `<div class="pageHeader"><div class="logoBox">${logoMarkup('120px', '🎓')}</div><div class="inst"><h2>${esc(branding.institution || '')}</h2>${addrLine}${diaryLine}</div><div class="yearBox">${esc(yearValue)}</div></div>`; }
+function renderDiaryPage(exam, rows, totalStudents, startIndex, isLast, withLetters) { 
+  let regList; 
+  if ((exam.regOverride || '').trim()) regList = exam.regOverride.trim().toUpperCase(); 
+  else regList = compressRegList(rows.filter(Boolean).map(s => s.reg)); 
+  const dateStr = formatDate(exam.dateISO); 
+  const timeStr = formatTimeRange(exam.timeStart, exam.timeEnd); 
+  const rowsHtml = rows.map((s, i) => { 
+    const n = startIndex + i + 1; 
+    if (!s) return `<tr><td class="c">${n}</td><td></td><td></td><td></td></tr>`; 
+    return `<tr><td class="c">${n}</td><td>${esc(s.reg)}</td><td>${esc(s.name)}</td><td></td></tr>`; 
+  }).join(''); 
+  const signoff = isLast ? `<table class="signoff"><tr><td class="lbl">No. of Students Present:</td><td></td><td class="lbl">Name of the Invigilator-1:</td><td></td></tr><tr><td class="lbl">No. of Students Absent:</td><td></td><td class="lbl">Signature of the Invigilator with Date:</td><td></td></tr><tr><td class="lbl">Total No. of Students:</td><td></td><td class="lbl">Name of the Invigilator-2:</td><td></td></tr><tr><td></td><td></td><td class="lbl">Signature of the Invigilator with Date:</td><td></td></tr></table>` : ''; 
+  return `<section class="page diary-page">${pageHeader(exam, withLetters)}
+  <table class="diary">
+    <colgroup><col style="width:22%"><col style="width:26%"><col style="width:22%"><col style="width:30%"></colgroup>
+    <tbody>
+      <tr><td colspan="4" class="titleCell">${esc((exam.title || '').toUpperCase())}</td></tr>
+      <tr>
+        <td class="lblCell"><b>Date:</b> <b>${esc(dateStr)}</b></td>
+        <td class="lblCell"><b>Room No.:</b> <b>${esc(exam.room)}</b></td>
+        <td class="lblCell"><b>Time:</b> <b>${esc(timeStr)}</b></td>
+        <td rowspan="3" class="regCell"><span class="lbl">Register No's. Allotted:</span><br><b>${esc(regList)}</b></td>
+      </tr>
+      <tr>
+        <td colspan="2" class="lblCell"><b>Course Title:</b> <b>${esc((exam.courseTitle || '').toUpperCase())}</b></td>
+        <td class="lblCell"><b>Course Code:</b> <b>${esc((exam.courseCode || '').toUpperCase())}</b></td>
+      </tr>
+      <tr>
+        <td colspan="3" class="lblCell"><b>No. of Students Allotted:</b> <b>${totalStudents}</b></td>
+      </tr>
+    </tbody>
+    <tbody>
+      <tr class="headRow"><th>Sl. No</th><th>Registration Number</th><th>Students Name</th><th>Signature</th></tr>
+      ${rowsHtml}
+    </tbody>
+  </table>
+  ${signoff}
+  </section>`; 
+}
+function buildDiaryPages(exams, withLetters) {
+  let globalTotal = 0;
+  const examChunksMap = new Map();
+  exams.forEach(exam => {
+    const students = parseStudents(exam.studentsText);
+    if (students.length === 0) return;
+    const per = 27; 
+    const extra = parseInt(exam.extraBlankRows) || 0;
+    
+    const programmeGroups = groupConsecutiveByProgramme(students);
+    const examChunks = [];
+    
+    for (let gIdx = 0; gIdx < programmeGroups.length; gIdx++) {
+      const g = programmeGroups[gIdx];
+      if (g.students.length === 0) continue;
+      const chunks = [];
+      for (let i = 0; i < g.students.length; i += per) chunks.push(g.students.slice(i, i + per));
+      
+      // If this is the LAST programme group of this exam, append the extra blank rows to its last chunk
+      if (gIdx === programmeGroups.length - 1 && extra > 0) {
+        const lastChunk = chunks[chunks.length - 1];
+        for (let k = 0; k < extra; k++) lastChunk.push(null);
+      }
+      
+      if (chunks.length > 0) { examChunks.push({ g, chunks }); globalTotal += chunks.length; }
+    }
+    if (examChunks.length > 0) examChunksMap.set(exam.id, examChunks);
+  });
+  let html = '';
+  exams.forEach(exam => {
+    const examChunks = examChunksMap.get(exam.id); if (!examChunks) return;
+    const per = 27;
+    const students = parseStudents(exam.studentsText);
+    for (const { chunks } of examChunks) {
+      chunks.forEach((chunk, ci) => {
+        const rows = chunk.slice();
+        const isLast = ci === chunks.length - 1;
+        html += renderDiaryPage(exam, rows, students.length, ci * per, isLast, withLetters);
+      });
+    }
+  });
+  return { html, total: globalTotal };
+}
+function buildAbsenteesRowsFromEntries(entries) { const rows = []; for (const entry of entries) { const { exam, group, isFirstGroup } = entry; const total = group.students.length; const regList = compressRegList(group.students.map(s => s.reg)); let absent = '', present = ''; if (isFirstGroup) { const a = (exam.absenteesValue || '').trim(); const p = (exam.presentValue || '').trim(); if (a) absent = a; if (p) present = p; } rows.push({ room: exam.room || '', programme: group.code || '', course: exam.courseTitle || '', regs: regList, total: total || '', absent, present }); } return rows; }
+function renderAbsenteesPage(entries, withLetters, isLastPageOfRoom) {
+  const headerTitle = entries.length ? resolveStatementTitle(entries[0].exam) : '';
+  const dateStr = entries.find(e => e.exam.dateISO)?.exam.dateISO;
+  const dateDisplay = dateStr ? formatDateShort(dateStr) : '';
+  const starts = entries.map(e => e.exam.timeStart).filter(Boolean).sort();
+  const ends = entries.map(e => e.exam.timeEnd).filter(Boolean).sort();
+  const timeRange = (starts.length && ends.length) ? formatTimeRange(starts[0], ends[ends.length - 1]) : '';
+  const addrLine = withLetters ? (branding.address || '') : '';
+  const rowsData = buildAbsenteesRowsFromEntries(entries);
+  const rows = rowsData.map(r => `<tr><td>${esc(r.room)}</td><td>${esc(r.programme)}</td><td class="courseCell">${esc((r.course || '').toUpperCase())}</td><td class="regCell">${esc(r.regs)}</td><td>${esc(String(r.total))}</td><td>${esc(r.absent)}</td><td>${esc(r.present)}</td></tr>`).join('');
+  
+  const signBlock = isLastPageOfRoom ? `<div class="abSignArea"><div class="abSignBlock"><div class="abSignLine">Signature of the Invigilator</div></div></div>` : '';
+
+  return `<section class="page absentees-page">${withLetters ? `<div class="abBigLogo">${logoMarkup('260px', '🎓')}</div>` : ''}${addrLine ? `<div class="abAddrLine">${esc(addrLine)}</div>` : ''}<div class="abHeader">${headerTitle ? `<div class="abSub">${esc(headerTitle)}</div>` : ''}<div class="abTitle">Absentees statement- Course Wise</div>${(dateDisplay || timeRange) ? `<div class="abDate">${dateDisplay ? 'Date: ' + esc(dateDisplay) : ''}${timeRange ? (dateDisplay ? '  ' : '') + 'Time: ' + esc(timeRange) : ''}</div>` : ''}</div><table class="abStatement"><colgroup><col style="width:14%"><col style="width:11%"><col style="width:20%"><col style="width:29%"><col style="width:8%"><col style="width:10%"><col style="width:8%"></colgroup><thead><tr><th>Room Name</th><th>Programme Code</th><th>Course Name</th><th>Registration Number</th><th>Total Strength</th><th>Reg.No.of Absentees</th><th>No.of Present</th></tr></thead><tbody>${rows}</tbody></table>${signBlock}</section>`;
+}
+function buildAbsenteesPages(exams, withLetters) {
+  const validExams = exams.filter(ex => parseStudents(ex.studentsText).length > 0);
+  if (validExams.length === 0) return { html: '', total: 0 };
+  const sortedExams = [...validExams].sort((a, b) => (a.room || '').localeCompare(b.room || ''));
+  const allEntries = [];
+  sortedExams.forEach(exam => { 
+    const groups = splitStudentsByProgramme(exam).filter(g => g.students.length > 0); 
+    groups.forEach((g, gi) => allEntries.push({ exam, group: g, isFirstGroup: gi === 0, room: exam.room || 'Unassigned' })); 
+  });
+  if (allEntries.length === 0) return { html: '', total: 0 };
+  const groups = [];
+  let currentGroup = null;
+  allEntries.forEach(entry => {
+    const room = entry.room;
+    const date = entry.exam.dateISO || '';
+    const time = (entry.exam.timeStart || '') + '|' + (entry.exam.timeEnd || '');
+    const key = `${room}__${date}__${time}`;
+    if (!currentGroup || currentGroup.key !== key) { currentGroup = { key, entries: [], room, date, time }; groups.push(currentGroup); }
+    currentGroup.entries.push(entry);
+  });
+  let html = '';
+  let globalPageCounter = 1;
+  groups.forEach((group) => {
+    const maxRows = 4;
+    const pagesForThisRoom = [];
+    for (let i = 0; i < group.entries.length; i += maxRows) { pagesForThisRoom.push(group.entries.slice(i, i + maxRows)); }
+    const totalPagesForRoom = pagesForThisRoom.length;
+    pagesForThisRoom.forEach((pageEntries, pageIndex) => {
+      const isLastPageOfRoom = (pageIndex === totalPagesForRoom - 1);
+      html += renderAbsenteesPage(pageEntries, withLetters, isLastPageOfRoom);
+      globalPageCounter++;
+    });
+  });
+  return { html, total: globalPageCounter - 1 };
+}
+function buildRoomAllotmentPages(exams, withLetters) {
+  const validExams = exams.filter(ex => parseStudents(ex.studentsText).length > 0);
+  if (validExams.length === 0) return { html: '', total: 0 };
+  const allRows = [];
+  validExams.forEach(exam => { const groups = splitStudentsByProgramme(exam).filter(g => g.students.length > 0); const roomInfo = ROOMS.find(r => r.name === exam.room); groups.forEach(g => { allRows.push({ time: formatTimeRange(exam.timeStart, exam.timeEnd), room: roomInfo ? (roomInfo.shortName || exam.room) : (exam.room || ''), block: roomInfo ? roomInfo.block : '', programme: g.code || '', course: exam.courseTitle || '', regs: compressRegList(g.students.map(s => s.reg)), total: g.students.length }); }); });
+  if (allRows.length === 0) return { html: '', total: 0 };
+  const allDates = [...new Set(validExams.filter(e => e.dateISO).map(e => e.dateISO))];
+  const dateDisplay = allDates.length === 1 ? formatDateShort(allDates[0]) : allDates.length > 1 ? 'Multiple Dates' : '';
+  const examTitle = validExams.find(e => (e.title || '').trim())?.title || '';
+  const grandTotal = allRows.reduce((s, r) => s + r.total, 0);
+  const maxRows = 28; 
+  const pages = [];
+  for (let i = 0; i < allRows.length; i += maxRows) pages.push(allRows.slice(i, i + maxRows));
+  let html = '';
+  pages.forEach((rows, i) => { html += renderRoomAllotmentPage(rows, i + 1, pages.length, grandTotal, withLetters, dateDisplay, examTitle); });
+  return { html, total: pages.length };
+}
+function renderRoomAllotmentPage(rows, pageNo, totalPages, grandTotal, withLetters, dateDisplay, examTitle) {
+  const addrLine = withLetters ? (branding.address || '') : '';
+  const rowsHtml = rows.map(r => `<tr><td style="white-space:nowrap;">${esc(r.time)}</td><td style="white-space:nowrap;">${esc(r.room)}</td><td>${esc(r.programme)}</td><td style="text-align:left;padding-left:8px;">${esc((r.course || '').toUpperCase())}</td><td style="text-align:center;word-break:break-all;">${esc(r.regs)}</td><td>${esc(String(r.total))}</td></tr>`).join('');
+  const isLastPage = pageNo === totalPages;
+  const totalRowHtml = isLastPage ? `<tr class="totalRow"><td colspan="4"></td><td style="text-align:right;padding-right:14px;font-weight:800;">TOTAL</td><td style="font-weight:800;">${grandTotal}</td></tr>` : '';
+  const signRowHtml = isLastPage ? `<tr class="signRow"><td colspan="6"><div style="font-weight:800;margin-bottom:6px;">Sd/-</div><div style="font-weight:800;">Controller of Examinations</div></td></tr>` : '';
+  return `<section class="page room-allot-page">${withLetters ? `<div class="abBigLogo">${logoMarkup('260px', '🎓')}</div>` : ''}${addrLine ? `<div class="abAddrLine">${esc(addrLine)}</div>` : ''}<div class="abHeader" style="margin-bottom: 12px;"><div class="abSub" style="font-size:14px;">Room Allotment - Course Wise</div>${examTitle ? `<div class="abSub">${esc((examTitle || '').toUpperCase())}</div>` : ''}${dateDisplay ? `<div class="abDate">Date: ${esc(dateDisplay)}</div>` : ''}</div><table class="roomAllotment"><colgroup><col style="width:18%"><col style="width:20%"><col style="width:12%"><col style="width:20%"><col style="width:20%"><col style="width:10%"></colgroup><thead><tr><th>Time</th><th>Room Name</th><th>Programme<br>Code</th><th>Course Name</th><th>Registration Number</th><th>Total<br>Strength</th></tr></thead><tbody>${rowsHtml}${totalRowHtml}${signRowHtml}</tbody></table></section>`;
+}
+function buildAccessKeyPages(exams, withLetters) {
+  const validExams = exams.filter(ex => parseStudents(ex.studentsText).length > 0);
+  if (validExams.length === 0) return { html: '', total: 0 };
+  let html = ''; let total = 0;
+  const roomMap = new Map();
+  validExams.forEach(exam => { if (!roomMap.has(exam.room)) roomMap.set(exam.room, []); const students = parseStudents(exam.studentsText); students.forEach(s => roomMap.get(exam.room).push({ student: s, exam })); });
+  roomMap.forEach((items, roomName) => {
+    if (items.length === 0) return;
+    const timeGroups = new Map();
+    items.forEach(item => { const timeKey = `${item.exam.timeStart || '00:00'}-${item.exam.timeEnd || '23:59'}`; if (!timeGroups.has(timeKey)) timeGroups.set(timeKey, { exam: item.exam, students: [] }); timeGroups.get(timeKey).students.push(item.student); });
+    timeGroups.forEach((group) => {
+      const students = group.students;
+      const exam = group.exam;
+      const headerTitle = resolveStatementTitle(exam);
+      const dateDisplay = exam.dateISO ? formatDateShort(exam.dateISO) : '';
+      const timeDisplay = formatTimeRange(exam.timeStart, exam.timeEnd);
+      
+      const maxRowsPerPage = 28; // 56 students / 2 pages = 28 per page
+      const pages = [];
+      for (let i = 0; i < students.length; i += maxRowsPerPage) pages.push(students.slice(i, i + maxRowsPerPage));
+      
+      pages.forEach((chunk, p) => {
+        let rowsHtml = chunk.map((s, i) => { 
+          const accessData = state.accessKeys[s.reg] || {}; 
+          const key = accessData.key || 'N/A'; 
+          const start = accessData.start || 'N/A'; 
+          const end = accessData.end || 'N/A'; 
+          const sNo = (p * maxRowsPerPage) + i + 1; 
+          return `<tr><td>${sNo}</td><td class="regCell" style="text-align:center;font-size:14px;">${esc(s.reg)}</td><td>${esc(s.name)}</td><td>${esc(start)}</td><td>${esc(end)}</td><td style="font-weight:bold;font-size:14px;">${esc(key)}</td></tr>`; 
+        }).join('');
+        
+        html += `<section class="page access-keys-page"><div class="abBigLogo" style="margin-bottom:20px;">${logoMarkup('300px', '🎓')}</div><div style="text-align:center; margin-bottom:15px;"><div style="font-size:18px; font-weight:800; text-transform:uppercase;">Access Keys</div><div style="font-size:14px; margin-top:8px; font-weight:bold;">Note: Do Not Allow The Student To Write The Access Keys Anywhere, Including On The Hall Ticket Or In Hands</div></div><div style="margin-bottom:10px;"><div style="border:1px solid #000; padding:6px; text-align:center; font-size:14px; font-weight:bold; background:#f8fafc;">Room Details: ${esc(roomName)}</div><div style="border:1px solid #000; border-top:0; padding:6px; text-align:center; font-size:12px; font-weight:bold;">${headerTitle ? 'Exam: ' + esc(headerTitle) : ''}<br>${dateDisplay ? 'Date: ' + esc(dateDisplay) : ''}${timeDisplay ? ' | Time: ' + esc(timeDisplay) : ''}</div></div><table class="accessKeyTable"><colgroup><col style="width:8%"><col style="width:22%"><col style="width:25%"><col style="width:15%"><col style="width:15%"><col style="width:15%"></colgroup><thead><tr><th>S.No</th><th>User Code</th><th>Student Name</th><th>Exam Start Date</th><th>Exam End Date</th><th>Access Key</th></tr></thead><tbody>${rowsHtml}</tbody></table></section>`;
+        total++;
+      });
+    });
+  });
+  return { html, total };
+}
+function renderPreview() {
+  sanitizeActiveSlot();
+  const filteredExams = getFilteredExams();
+  const preview = document.getElementById('preview');
+  const view = state.view;
+  let result;
+  if (view === 'absentees') result = buildAbsenteesPages(filteredExams, state.lettersOn);
+  else if (view === 'roomAllotment') result = buildRoomAllotmentPages(filteredExams, state.lettersOn);
+  else if (view === 'accessKeys') result = buildAccessKeyPages(filteredExams, state.lettersOn);
+  else if (view === 'database' || view === 'folders' || view === 'users') result = { html: '', total: 0 };
+  else result = buildDiaryPages(filteredExams, state.lettersOn);
+  preview.innerHTML = result.html || '<div class="empty">No data yet.</div>';
+  const pageInfoEl = document.getElementById('pageInfo');
+  if (pageInfoEl) pageInfoEl.textContent = `${result.total} page(s)`;
+}
+
+/* ═══════════════ MASTER STORAGE (PER-USER) ═══════════════ */
+let msCurrentFolderPath = [];
+let mvCurrentFolderPath = [];
+let msViewingUser = null;
+
+function resolveFolderByPathNames(pathNames, ownerFilter) {
+  if (!pathNames || pathNames.length === 0) return null;
+  let list = ownerFilter !== undefined ? getUserFolderTree(ownerFilter) : getUserFolderTree(msViewingUser);
+  let current = null;
+  for (const name of pathNames) {
+    if (!list) return null;
+    current = list.find(f => f.name === name);
+    if (!current) return null;
+    list = current.subFolders || [];
+  }
+  return current;
+}
+function findFolderById(fldrs, folderId) {
+  for (const f of fldrs || []) {
+    if (f.id === folderId) return f;
+    if (f.subFolders) { const r = findFolderById(f.subFolders, folderId); if (r) return r; }
+  }
+  return null;
+}
+function findExamByIdInFolders(fldrs, examId) {
+  for (const f of fldrs || []) {
+    const idx = (f.exams || []).findIndex(e => e.id === examId);
+    if (idx > -1) return { folder: f, exam: f.exams[idx], index: idx };
+    if (f.subFolders) { const r = findExamByIdInFolders(f.subFolders, examId); if (r) return r; }
+  }
+  return null;
+}
+function getUserFolderTree(owner) {
+  if (!owner) return state.folders;
+  if (owner === '__ALL__') return state.folders;
+  return state.folders.filter(f => (f.owner || 'MohanRaj') === owner);
+}
+function ensureFolderIds() {
+  let changed = false;
+  function walk(list) {
+    (list || []).forEach(f => {
+      if (!f.id) { f.id = 'f_' + Math.random().toString(36).slice(2, 10); changed = true; }
+      if (!f.owner) { f.owner = 'MohanRaj'; changed = true; }
+      if (f.subFolders) walk(f.subFolders);
+    });
+  }
+  walk(state.folders);
+  if (changed) saveFolders();
+}
+
+function renderUserSelect() {
+  const wrap = document.getElementById('msUserSelectWrap');
+  if (!currentUser || currentUser.role !== 'admin') { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  wrap.style.display = 'flex';
+  const options = ['__ALL__', ...usersDB.map(u => u.username)].map(u => {
+    const label = u === '__ALL__' ? '🌍 All Users' : `👤 ${u}`;
+    return `<option value="${esc(u)}" ${u === msViewingUser ? 'selected' : ''}>${esc(label)}</option>`;
+  }).join('');
+  wrap.innerHTML = `<span>👤 Viewing storage for:</span><select onchange="msSwitchUser(this.value)">${options}</select>`;
+}
+window.msSwitchUser = function (val) { msViewingUser = val; msCurrentFolderPath = []; renderMS(); };
+
+function openMasterStorage() {
+  if (!hasRight('access_master_storage')) { toast('⛔ No Master Storage permission.', 'error'); state.view = 'diary'; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === 'diary')); renderEditor(); return; }
+  ensureFolderIds();
+  const modal = document.getElementById('masterStorageModal');
+  const alreadyOpen = !modal.classList.contains('hidden');
+  if (!alreadyOpen) {
+    msCurrentFolderPath = [];
+    msViewingUser = currentUser.username;
+    window._msSelected = new Set();
+    renderUserSelect();
+    modal.classList.remove('hidden');
+  }
+  renderMS();
+}
+window.closeMasterStorage = function () {
+  const modal = document.getElementById('masterStorageModal');
+  if (modal) modal.classList.add('hidden');
+  const bulkBar = document.getElementById('msBulkBar');
+  if (bulkBar) bulkBar.remove();
+  if (window._msSelected) window._msSelected.clear();
+  state.view = 'diary';
+  msCurrentFolderPath = [];
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === 'diary'));
+  renderEditor();
+  renderPreview();
+};
+window.closeMoveModal = function () { document.getElementById('moveFolderModal').classList.add('hidden'); };
+window.msNavigate = function (pathArray) { msCurrentFolderPath = pathArray || []; renderMS(); };
+
+window.msDownloadFolder = function (pathNames) {
+  if (!hasRight('access_master_storage')) { toast('⛔ No permission.', 'error'); return; }
+  if (!pathNames || pathNames.length === 0) { toast('Open a folder first.', 'info'); return; }
+  const node = resolveFolderByPathNames(pathNames, msViewingUser === '__ALL__' ? undefined : msViewingUser);
+  if (!node) { toast('Folder not found.', 'error'); return; }
+  const payload = { __type: 'gcu_folder_backup', __version: 1, __exportedAt: new Date().toISOString(), folder: node };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  const safeName = (node.name || 'folder').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+  a.download = `folder-${safeName}-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  toast('Folder downloaded', 'success');
+};
+window.msDownloadAll = function () {
+  if (!hasRight('access_master_storage')) { toast('⛔ No permission.', 'error'); return; }
+  const payload = { __type: 'gcu_master_storage_backup', __version: 1, __exportedAt: new Date().toISOString(), folders: msViewingUser === '__ALL__' ? state.folders : getUserFolderTree(msViewingUser) };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `master-storage-${msViewingUser}-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  toast('Backup downloaded', 'success');
+};
+function msRestoreFolderFromFile(file) {
+  if (!hasRight('access_master_storage')) { toast('⛔ No permission.', 'error'); return; }
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      let folderToImport = null;
+      const targetUser = (msViewingUser === '__ALL__' ? currentUser.username : msViewingUser);
+      if (data.__type === 'gcu_folder_backup' && data.folder) folderToImport = data.folder;
+      else if (data.__type === 'gcu_master_storage_backup' && Array.isArray(data.folders)) {
+        if (!confirm(`Full backup with ${data.folders.length} root folder(s).\n\nOK = Merge into current storage.`)) return;
+        snapshot();
+        state.folders = state.folders.concat(data.folders);
+        saveFolders(); renderMS(); toast(`Restored ${data.folders.length} folder(s)`, 'success');
+        return;
+      } else if (data.name && (data.subFolders || data.exams)) folderToImport = data;
+      else { toast('Unrecognized file format.', 'error'); return; }
+      const targetFolder = resolveFolderByPathNames(msCurrentFolderPath, targetUser);
+      const siblingList = targetFolder ? (targetFolder.subFolders || []) : getUserFolderTree(targetUser);
+      let finalName = folderToImport.name || 'Restored Folder';
+      if (siblingList.some(f => f.name === finalName)) finalName = finalName + ' (Restored)';
+      snapshot();
+      folderToImport.name = finalName;
+      folderToImport.id = folderToImport.id || 'f_' + Math.random().toString(36).slice(2, 10);
+      if (!folderToImport.subFolders) folderToImport.subFolders = [];
+      if (!folderToImport.exams) folderToImport.exams = [];
+      folderToImport.owner = targetUser;
+      const cleanNode = n => { if (!n.id) n.id = 'f_' + Math.random().toString(36).slice(2, 10); delete n._searchPath; (n.exams || []).forEach(ex => { delete ex._searchPath; ex.owner = ex.owner || targetUser; }); (n.subFolders || []).forEach(cleanNode); };
+      cleanNode(folderToImport);
+      if (!targetFolder) state.folders.push(folderToImport);
+      else { if (!targetFolder.subFolders) targetFolder.subFolders = []; targetFolder.subFolders.push(folderToImport); }
+      saveFolders(); renderMS();
+      toast(`Folder "${finalName}" restored`, 'success');
+    } catch (err) { console.error(err); toast('Failed to parse file.', 'error'); }
+  };
+  reader.readAsText(file);
+}
+
+function renderMS() {
+  const bc = document.getElementById('msBreadcrumb');
+  const treeList = msViewingUser === '__ALL__' ? state.folders : getUserFolderTree(msViewingUser);
+  let bcHtml = `<span class="crumb" onclick="msNavigate([])">📁 Home</span>`;
+  if (msCurrentFolderPath.length > 0) {
+    let list = treeList;
+    let current = null;
+    for (let i = 0; i < msCurrentFolderPath.length; i++) {
+      const name = msCurrentFolderPath[i];
+      current = (list || []).find(f => f.name === name);
+      if (!current) break;
+      const slice = msCurrentFolderPath.slice(0, i + 1);
+      bcHtml += `<span class="sep">›</span><span class="crumb" onclick='msNavigate(${JSON.stringify(slice).replace(/'/g, "&#39;")})'>📂 ${esc(current.name)}</span>`;
+      list = current.subFolders || [];
+    }
+  }
+  bc.innerHTML = bcHtml;
+  let toolbarEl = document.getElementById('msToolbarExt');
+  if (!toolbarEl) { toolbarEl = document.createElement('div'); toolbarEl.id = 'msToolbarExt'; const navEl = document.getElementById('msBreadcrumb'); if (navEl && navEl.parentNode) navEl.parentNode.insertBefore(toolbarEl, navEl.nextSibling); }
+  toolbarEl.style.cssText = 'display:flex; gap:8px; padding:10px 20px; background:#fff; border-bottom:1px solid #e2e8f0; flex-wrap:wrap; align-items:center;';
+  const canMgmt = hasRight('access_master_storage');
+  const isRoot = msCurrentFolderPath.length === 0;
+  const pathJson = JSON.stringify(msCurrentFolderPath).replace(/'/g, "&#39;");
+  toolbarEl.innerHTML = canMgmt ? `
+    <button class="btn subtle mini" onclick='msDownloadFolder(${pathJson})' ${isRoot ? 'disabled' : ''}>📥 Download This Folder</button>
+    <button class="btn subtle mini" onclick="msDownloadAll()">📦 Download All</button>
+    <button class="btn primary mini" onclick="document.getElementById('hiddenFolderRestoreInput').click()">📤 Restore Folder</button>
+    <div style="width:1px; height:20px; background:#cbd5e1; margin:0 4px;"></div>
+    <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:#475569; cursor:pointer;">
+      <input type="checkbox" onclick="window.msToggleSelectAll()" style="width:16px; height:16px; accent-color:#4f46e5; cursor:pointer;">
+      Select All
+    </label>
+    <span style="flex:1;"></span>
+    <span style="font-size:11px; color:#64748b;">${treeList.length} root folder(s) · ${esc(msViewingUser === '__ALL__' ? 'All Users' : msViewingUser)}</span>
+  ` : `<span style="font-size:11.5px; color:#94a3b8;">Read-only view</span>`;
+  const sidebar = document.getElementById('msSidebar');
+  let treeHtml = `<div class="folder-tree-node ${msCurrentFolderPath.length === 0 ? 'active' : ''}" onclick="msNavigate([])">📁 ${msViewingUser === '__ALL__' ? 'All Users' : esc(msViewingUser)}'s Storage</div>`;
+  function renderTree(folders, pathNames) {
+    let html = '';
+    (folders || []).forEach(f => {
+      const childPath = [...pathNames, f.name];
+      const isActive = JSON.stringify(childPath) === JSON.stringify(msCurrentFolderPath);
+      const jsonPath = JSON.stringify(childPath).replace(/'/g, "&#39;");
+      const ownerTag = msViewingUser === '__ALL__' ? ` <span style="font-size:9px;color:#94a3b8;">(${esc(f.owner || '—')})</span>` : '';
+      html += `<div class="folder-tree-node ${isActive ? 'active' : ''}" style="padding-left: ${pathNames.length * 16 + 10}px;" onclick='msNavigate(${jsonPath})'>📂 ${esc(f.name)}${ownerTag}</div>`;
+      if (f.subFolders && f.subFolders.length > 0) html += renderTree(f.subFolders, childPath);
+    });
+    return html;
+  }
+  treeHtml += renderTree(treeList, []);
+  sidebar.innerHTML = treeHtml;
+  renderMSContents();
+}
+
+window.renderMSContents = function () {
+  const container = document.getElementById('msContents');
+  const searchInput = document.getElementById('msSearchInput');
+  const search = (searchInput ? searchInput.value : '').toLowerCase().trim();
+  const treeList = msViewingUser === '__ALL__' ? state.folders : getUserFolderTree(msViewingUser);
+  let folder = resolveFolderByPathNames(msCurrentFolderPath, msViewingUser === '__ALL__' ? undefined : msViewingUser);
+  let subFolders = folder ? (folder.subFolders || []) : treeList;
+  let exams = folder ? (folder.exams || []) : [];
+  if (search) {
+    exams = [];
+    function collectAll(fldrs, pathStr) {
+      (fldrs || []).forEach(f => {
+        (f.exams || []).forEach(ex => {
+          const hay = [ex.courseTitle, ex.courseCode, ex.room, ex.title, ex.studentsText].join(' ').toLowerCase();
+          if (hay.includes(search)) { ex._searchPath = pathStr + f.name; exams.push(ex); }
+        });
+        if (f.subFolders) collectAll(f.subFolders, pathStr + f.name + ' / ');
+      });
+    }
+    collectAll(treeList, '');
+    subFolders = [];
+  }
+  let html = '';
+  const canDelete = currentUser && currentUser.role === 'admin';
+  const validIds = new Set([...subFolders.map(f=>f.id), ...exams.map(e=>e.id)]);
+  window._msSelected.forEach(id => { if (!validIds.has(id)) window._msSelected.delete(id); });
+  if (!search && subFolders.length > 0) {
+    subFolders.forEach(sf => {
+      const childPath = [...msCurrentFolderPath, sf.name];
+      const jsonPath = JSON.stringify(childPath).replace(/'/g, "&#39;");
+      const ownerTag = msViewingUser === '__ALL__' ? ` · Owner: <b>${esc(sf.owner || '—')}</b>` : '';
+      const isChecked = window._msSelected.has(sf.id) ? 'checked' : '';
+      html += `<div class="ms-item folder ${isChecked ? 'selected' : ''}" onclick='msNavigate(${jsonPath})'>
+        <input type="checkbox" class="ms-select-checkbox" data-id="${esc(sf.id)}" ${isChecked} onclick="event.stopPropagation(); window.msToggleSelect('${esc(sf.id)}')">
+        <div class="ms-item-icon">📂</div>
+        <div class="ms-item-info">
+          <div class="ms-item-title">${esc(sf.name)}</div>
+          <div class="ms-item-meta">Folder · ${(sf.exams || []).length} exams${ownerTag}</div>
+        </div>
+        <div class="ms-item-actions" onclick="event.stopPropagation()">
+          <button title="Download this folder" onclick='msDownloadFolder(${jsonPath})'>📥</button>
+          <button title="Rename" onclick="msAction('renameFolder', '${esc(sf.id)}')">✏️</button>
+          ${canDelete ? `<button title="Delete" class="del" onclick="msAction('deleteFolder', '${esc(sf.id)}')">🗑</button>` : ''}
+        </div>
+      </div>`;
+    });
+  }
+  if (exams.length > 0) {
+    exams.forEach(ex => {
+      const pathLabel = ex._searchPath ? `<div class="ms-item-path">📂 ${esc(ex._searchPath)}</div>` : '';
+      const ownerTag = msViewingUser === '__ALL__' ? ` · <b>${esc(ex.owner || '—')}</b>` : '';
+      const isChecked = window._msSelected.has(ex.id) ? 'checked' : '';
+      html += `<div class="ms-item exam ${isChecked ? 'selected' : ''}">
+        <input type="checkbox" class="ms-select-checkbox" data-id="${esc(ex.id)}" ${isChecked} onclick="event.stopPropagation(); window.msToggleSelect('${esc(ex.id)}')">
+        <div class="ms-item-icon" style="font-size:14px; font-weight:800; color:#4f46e5; background:#eef2ff; border-radius:4px; padding:4px;">📄</div>
+        <div class="ms-item-info">
+          <div class="ms-item-title">${esc((ex.courseTitle || 'Untitled Exam').toUpperCase())}</div>
+          <div class="ms-item-meta">${esc(ex.room || 'No Room')} · ${esc(formatDateShort(ex.dateISO))} · ${parseStudents(ex.studentsText).length} students${ownerTag}</div>
+          ${pathLabel}
+        </div>
+        <div class="ms-item-actions">
+          <button title="PDF Preview & Download" class="btn primary mini" onclick="msOpenPdfPreview('${esc(ex.id)}')" style="background:#dc2626; border-color:#b91c1c;">📄 PDF</button>
+          <button title="Restore to Main View" class="btn subtle mini" style="color:#15803d; border-color:#a7f3d0;" onclick="msAction('restoreExam', null, '${esc(ex.id)}')">Restore</button>
+          ${canDelete ? `<button title="Delete Permanently" class="del" onclick="msAction('deleteExam', null, '${esc(ex.id)}')">🗑</button>` : ''}
+        </div>
+      </div>`;
+    });
+  }
+  if (html === '') html = `<div style="text-align:center; color:#94a3b8; padding:40px; font-size:13px;">No items found.</div>`;
+  container.innerHTML = html;
+  updateBulkBar();
+};
+
+window.msToggleSelect = function(id) {
+  if (!window._msSelected) window._msSelected = new Set();
+  if (window._msSelected.has(id)) window._msSelected.delete(id);
+  else window._msSelected.add(id);
+  const cb = document.querySelector(`.ms-select-checkbox[data-id="${id}"]`);
+  if (cb) {
+    cb.checked = window._msSelected.has(id);
+    const parent = cb.closest('.ms-item');
+    if (parent) parent.classList.toggle('selected', cb.checked);
+  }
+  updateBulkBar();
+};
+
+window.msToggleSelectAll = function() {
+  if (!window._msSelected) window._msSelected = new Set();
+  const checkboxes = document.querySelectorAll('.ms-select-checkbox');
+  const allChecked = checkboxes.length > 0 && Array.from(checkboxes).every(cb => cb.checked);
+  checkboxes.forEach(cb => {
+    const id = cb.dataset.id;
+    if (allChecked) window._msSelected.delete(id);
+    else window._msSelected.add(id);
+  });
+  renderMSContents();
+};
+
+window.updateBulkBar = function() {
+  let bar = document.getElementById('msBulkBar');
+  const selectedCount = window._msSelected ? window._msSelected.size : 0;
+  if (selectedCount === 0) { if (bar) bar.remove(); return; }
+  const canDelete = currentUser && currentUser.role === 'admin';
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'msBulkBar';
+    bar.className = 'floating-bulk-bar';
+    document.body.appendChild(bar);
+  }
+  bar.innerHTML = `
+    <span class="count">${selectedCount} selected</span>
+    <button class="b-restore" onclick="msBulkRestore()">↺ Restore Selected</button>
+    <button class="b-download" onclick="msBulkDownload()">📥 Download Selected</button>
+    ${canDelete ? `<button class="b-delete" onclick="msBulkDelete()">🗑 Delete Selected</button>` : ''}
+    <button class="b-clear" onclick="window._msSelected.clear(); renderMSContents();">Clear</button>
+  `;
+};
+
+window.msBulkRestore = function() {
+  const selectedIds = Array.from(window._msSelected || []);
+  if (selectedIds.length === 0) return;
+  snapshot();
+  let restoredCount = 0;
+  selectedIds.forEach(id => {
+    const found = findExamByIdInFolders(state.folders, id);
+    if (found) {
+      const ex = found.exam;
+      delete ex._searchPath;
+      found.folder.exams.splice(found.index, 1);
+      ex.owner = ex.owner || currentUser.username;
+      state.exams.push(ex);
+      restoredCount++;
+    }
+  });
+  window._msSelected.clear();
+  invalidateRoomIndex(); invalidateConflictCache();
+  saveExams(); saveFolders();
+  closeMasterStorage();
+  toast(`Restored ${restoredCount} exam(s) to main view ✓`, 'success');
+};
+
+window.msBulkDelete = function() {
+  if (!currentUser || currentUser.role !== 'admin') { toast('⛔ Only admin can delete.', 'error'); return; }
+  const selectedIds = Array.from(window._msSelected || []);
+  if (selectedIds.length === 0) return;
+  if (!confirm(`Permanently delete ${selectedIds.length} selected item(s)?`)) return;
+  let deletedCount = 0;
+  function removeFolders(list) {
+    for (let i = list.length - 1; i >= 0; i--) {
+      if (window._msSelected.has(list[i].id)) { list.splice(i, 1); deletedCount++; window._msSelected.delete(list[i].id); }
+      else if (list[i].subFolders) { removeFolders(list[i].subFolders); }
+    }
+  }
+  function removeExams(list) {
+    (list || []).forEach(f => {
+      if (f.exams) { for (let i = f.exams.length - 1; i >= 0; i--) { if (window._msSelected.has(f.exams[i].id)) { f.exams.splice(i, 1); deletedCount++; window._msSelected.delete(f.exams[i].id); } } }
+      if (f.subFolders) removeExams(f.subFolders);
+    });
+  }
+  snapshot();
+  removeFolders(state.folders);
+  removeExams(state.folders);
+  saveFolders(); 
+  renderMS(); 
+  toast(`Deleted ${deletedCount} item(s)`, 'success');
+};
+
+window.msBulkDownload = function() {
+  const selectedIds = Array.from(window._msSelected || []);
+  if (selectedIds.length === 0) return;
+  toast(`Preparing ${selectedIds.length} download(s)...`, 'info');
+  let delay = 0;
+  selectedIds.forEach(id => {
+    const folder = findFolderById(state.folders, id);
+    if (folder) {
+      setTimeout(() => {
+        const payload = { __type: 'gcu_folder_backup', __version: 1, __exportedAt: new Date().toISOString(), folder: folder };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url;
+        const safeName = (folder.name || 'folder').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+        a.download = `folder-${safeName}-${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      }, delay);
+      delay += 300;
+    } else {
+      const examFound = findExamByIdInFolders(state.folders, id);
+      if (examFound) {
+        setTimeout(() => {
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = buildDiaryPages([examFound.exam], true).html;
+          tempDiv.style.position = 'fixed'; tempDiv.style.left = '-9999px'; tempDiv.style.background = '#fff';
+          document.body.appendChild(tempDiv);
+          html2pdf().set({
+            margin: 0,
+            filename: (examFound.exam.courseTitle || 'exam').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.pdf',
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          }).from(tempDiv).save().then(() => { tempDiv.remove(); });
+        }, delay);
+        delay += 500;
+      }
+    }
+  });
+  setTimeout(() => { window._msSelected.clear(); renderMS(); }, delay + 500);
+};
+
+window.msOpenPdfPreview = function (examId) {
+  const found = findExamByIdInFolders(state.folders, examId);
+  if (!found) { toast('Exam not found', 'error'); return; }
+  const targetExam = found.exam;
+  const examHtml = buildDiaryPages([targetExam], true).html;
+  const modalHtml = `<div id="pdfPreviewModal" class="modal-overlay" style="z-index: 950; padding: 0;"><div class="modal" style="max-width: 900px; width: 100%; height: 100%; max-height: 100vh; border-radius: 0; padding: 0; background: #e2e8f0; display: flex; flex-direction: column;"><div class="modal-head" style="background: #0f172a; border-bottom: none; padding: 12px 20px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;"><div style="flex:1;"><h3 style="margin:0; font-size:16px; color:#fff;">📄 PDF Preview — ${esc(targetExam.courseTitle || 'Untitled Exam')}</h3><p style="margin:2px 0 0; font-size:12px; color:#cbd5e1;">Room: ${esc(targetExam.room || 'N/A')} · Date: ${esc(formatDate(targetExam.dateISO))}</p></div><div style="display:flex; gap:10px;"><button class="btn primary" id="pdfDownloadBtn" style="background:#16a34a; border-color:#15803d;">📥 Download PDF</button><button class="btn subtle" onclick="closePdfPreview()">Close</button></div></div><div class="modal-body" style="padding: 20px; background: #cbd5e1; overflow: auto; flex: 1; display: flex; justify-content: center;"><div id="pdfPreviewContent" style="background: white; width: 100%; max-width: 850px; height: max-content; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">${examHtml}</div></div></div></div>`;
+  const div = document.createElement('div'); div.innerHTML = modalHtml; document.body.appendChild(div.firstElementChild);
+  document.getElementById('pdfDownloadBtn').addEventListener('click', () => {
+    const element = document.getElementById('pdfPreviewContent');
+    const opt = { margin: 0, filename: (targetExam.courseTitle || 'exam').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+    const btn = document.getElementById('pdfDownloadBtn'); const originalText = btn.innerHTML; btn.innerHTML = '⏳ Generating...'; btn.disabled = true;
+    html2pdf().set(opt).from(element).save().then(() => { btn.innerHTML = originalText; btn.disabled = false; toast('PDF Downloaded', 'success'); }).catch(err => { console.error(err); btn.innerHTML = originalText; btn.disabled = false; toast('Failed to generate PDF', 'error'); });
+  });
+};
+window.closePdfPreview = function () { const modal = document.getElementById('pdfPreviewModal'); if (modal) modal.remove(); };
+
+window.msAction = function (action, targetFolderId, examId) {
+  if (!hasRight('access_master_storage')) { toast('⛔ No permission.', 'error'); return; }
+  if ((action === 'deleteFolder' || action === 'deleteExam') && currentUser.role !== 'admin') { toast('⛔ Only Super Admin can delete from Master Storage.', 'error'); return; }
+  if (action === 'renameFolder') {
+    const target = findFolderById(state.folders, targetFolderId);
+    if (!target) { toast('Folder not found.', 'error'); return; }
+    const newName = prompt('Rename folder:', target.name);
+    if (newName && newName.trim()) { target.name = newName.trim(); saveFolders(); renderMS(); }
+    return;
+  }
+  if (action === 'deleteFolder') {
+    const target = findFolderById(state.folders, targetFolderId);
+    if (!target) { toast('Folder not found.', 'error'); return; }
+    if (!confirm(`Delete folder "${target.name}" and all contents?`)) return;
+    function removeFrom(list) { const idx = list.findIndex(f => f.id === targetFolderId); if (idx > -1) { list.splice(idx, 1); return true; } for (const f of list) { if (f.subFolders && removeFrom(f.subFolders)) return true; } return false; }
+    removeFrom(state.folders); saveFolders(); renderMS(); toast('Folder deleted', 'success');
+    return;
+  }
+  if (action === 'restoreExam') {
+    const found = findExamByIdInFolders(state.folders, examId);
+    if (!found) { toast('Exam not found', 'error'); return; }
+    snapshot();
+    const ex = found.exam;
+    delete ex._searchPath;
+    found.folder.exams.splice(found.index, 1);
+    ex.owner = ex.owner || currentUser.username;
+    state.exams.push(ex);
+    invalidateRoomIndex(); invalidateConflictCache();
+    saveExams(); saveFolders();
+    closeMasterStorage();
+    toast('Exam restored to main view ✓', 'success');
+    return;
+  }
+  if (action === 'deleteExam') {
+    const found = findExamByIdInFolders(state.folders, examId);
+    if (!found) { toast('Exam not found', 'error'); return; }
+    if (!confirm('Permanently delete this exam?')) return;
+    found.folder.exams.splice(found.index, 1);
+    saveFolders(); renderMS();
+    toast('Exam deleted', 'success');
+    return;
+  }
+};
+
+document.getElementById('msNewFolderBtn').addEventListener('click', () => {
+  if (!hasRight('access_master_storage')) { toast('⛔ No permission.', 'error'); return; }
+  const targetUser = msViewingUser === '__ALL__' ? currentUser.username : msViewingUser;
+  const name = prompt(`Enter new folder name (for ${targetUser}):`);
+  if (!name || !name.trim()) return;
+  const newF = { id: 'f_' + Math.random().toString(36).slice(2, 10), name: name.trim(), exams: [], subFolders: [], owner: targetUser };
+  const folder = resolveFolderByPathNames(msCurrentFolderPath, targetUser);
+  if (!folder) state.folders.push(newF);
+  else { if (!folder.subFolders) folder.subFolders = []; folder.subFolders.push(newF); }
+  saveFolders(); renderMS(); toast(`Folder created for ${targetUser}`, 'success');
+});
+
+function openMoveFolderModal() {
+  if (!hasRight('use_folder_actions')) { toast('⛔ No folder permission.', 'error'); return; }
+  const checked = Array.from(document.querySelectorAll('input[data-chk]:checked'));
+  if (checked.length === 0) { toast('Select at least one exam first.', 'info'); return; }
+  window._examsToMove = checked.map(c => c.dataset.chk);
+  mvCurrentFolderPath = [];
+  document.getElementById('moveFolderModal').classList.remove('hidden');
+  document.getElementById('mvNewFolderName').value = '';
+  renderMV();
+}
+window.mvNavigate = function (pathArray) { mvCurrentFolderPath = pathArray || []; renderMV(); };
+function renderMV() {
+  const bc = document.getElementById('mvBreadcrumb');
+  let bcHtml = `<span class="crumb" onclick="mvNavigate([])">📁 Home</span>`;
+  if (mvCurrentFolderPath.length > 0) {
+    let list = getUserFolderTree(currentUser.username);
+    let current = null;
+    for (let i = 0; i < mvCurrentFolderPath.length; i++) {
+      const name = mvCurrentFolderPath[i];
+      current = (list || []).find(f => f.name === name);
+      if (!current) break;
+      const slice = mvCurrentFolderPath.slice(0, i + 1);
+      bcHtml += `<span class="sep">›</span><span class="crumb" onclick='mvNavigate(${JSON.stringify(slice).replace(/'/g, "&#39;")})'>📂 ${esc(current.name)}</span>`;
+      list = current.subFolders || [];
+    }
+  }
+  bc.innerHTML = bcHtml;
+  const sidebar = document.getElementById('mvSidebar');
+  let treeHtml = `<div class="folder-tree-node ${mvCurrentFolderPath.length === 0 ? 'active' : ''}" onclick="mvNavigate([])">📁 ${esc(currentUser.username)}'s Storage</div>`;
+  function renderTree(folders, pathNames) {
+    let html = '';
+    (folders || []).forEach(f => {
+      const childPath = [...pathNames, f.name];
+      const isActive = JSON.stringify(childPath) === JSON.stringify(mvCurrentFolderPath);
+      const jsonPath = JSON.stringify(childPath).replace(/'/g, "&#39;");
+      html += `<div class="folder-tree-node ${isActive ? 'active' : ''}" style="padding-left: ${pathNames.length * 16 + 10}px;" onclick='mvNavigate(${jsonPath})'>📂 ${esc(f.name)}</div>`;
+      if (f.subFolders && f.subFolders.length > 0) html += renderTree(f.subFolders, childPath);
+    });
+    return html;
+  }
+  treeHtml += renderTree(getUserFolderTree(currentUser.username), []);
+  sidebar.innerHTML = treeHtml;
+  const container = document.getElementById('mvContents');
+  const folder = resolveFolderByPathNames(mvCurrentFolderPath, currentUser.username);
+  const subFolders = folder ? (folder.subFolders || []) : getUserFolderTree(currentUser.username);
+  let html = '';
+  if (subFolders.length === 0) html = `<div style="text-align:center; color:#94a3b8; padding:40px; font-size:13px;">No subfolders here.</div>`;
+  else subFolders.forEach(sf => { const childPath = [...mvCurrentFolderPath, sf.name]; const jsonPath = JSON.stringify(childPath).replace(/'/g, "&#39;"); html += `<div class="ms-item folder" onclick='mvNavigate(${jsonPath})'><div class="ms-item-icon">📂</div><div class="ms-item-info"><div class="ms-item-title">${esc(sf.name)}</div><div class="ms-item-meta">Folder · ${(sf.exams || []).length} exams</div></div></div>`; });
+  container.innerHTML = html;
+}
+document.getElementById('mvCreateFolderBtn').addEventListener('click', () => {
+  if (!hasRight('use_folder_actions')) { toast('⛔ No permission.', 'error'); return; }
+  const name = document.getElementById('mvNewFolderName').value.trim();
+  if (!name) { toast('Please type a folder name', 'error'); return; }
+  const folder = resolveFolderByPathNames(mvCurrentFolderPath, currentUser.username);
+  const newF = { id: 'f_' + Math.random().toString(36).slice(2, 10), name, exams: [], subFolders: [], owner: currentUser.username };
+  if (!folder) state.folders.push(newF);
+  else { if (!folder.subFolders) folder.subFolders = []; folder.subFolders.push(newF); }
+  saveFolders();
+  document.getElementById('mvNewFolderName').value = '';
+  renderMV();
+  toast('Folder created', 'success');
+});
+document.getElementById('confirmMoveBtn').addEventListener('click', () => {
+  if (!hasRight('use_folder_actions')) { toast('⛔ No permission.', 'error'); return; }
+  const selectedIds = window._examsToMove || [];
+  if (selectedIds.length === 0) { toast('No exams selected', 'error'); return; }
+  const toMove = state.exams.filter(ex => selectedIds.includes(ex.id));
+  if (toMove.length === 0) { toast('Exams no longer exist', 'error'); return; }
+  const folder = resolveFolderByPathNames(mvCurrentFolderPath, currentUser.username);
+  let targetName = '';
+  if (!folder) { const newF = { id: 'f_' + Math.random().toString(36).slice(2, 10), name: 'New Folder ' + new Date().toLocaleTimeString(), exams: toMove, subFolders: [], owner: currentUser.username }; state.folders.push(newF); targetName = newF.name; }
+  else { folder.exams = (folder.exams || []).concat(toMove); targetName = folder.name; }
+  state.exams = state.exams.filter(ex => !selectedIds.includes(ex.id));
+  if (state.exams.length === 0) state.exams.push(newExam());
+  document.getElementById('moveFolderModal').classList.add('hidden');
+  invalidateRoomIndex(); invalidateConflictCache();
+  saveExams(); saveFolders();
+  renderEditor(); renderPreview();
+  toast(`Moved ${toMove.length} exams to ${targetName}`, 'success');
+});
+
+function exportAllData() {
+  if (!hasRight('access_master_storage')) { toast('⛔ Admin permission required for backup.', 'error'); return; }
+  const payload = {
+    __type: 'gcu_full_portal_backup',
+    __version: 2,
+    __exportedAt: new Date().toISOString(),
+    exams: state.exams,
+    folders: state.folders,
+    users: usersDB,
+    database: state.database,
+    accessKeys: state.accessKeys,
+    branding: branding
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `GCU-Portal-Backup-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  toast('Full portal backup downloaded ✓', 'success');
+}
+
+function restoreAllData(file) {
+  if (!hasRight('access_master_storage')) { toast('⛔ Admin permission required for restore.', 'error'); return; }
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.__type !== 'gcu_full_portal_backup' || !data.exams) { toast('Invalid backup file format.', 'error'); return; }
+      if (!confirm('⚠ This will OVERWRITE ALL current data (Exams, Folders, Users, Database, Access Keys).\n\nProceed?')) return;
+      
+      snapshot();
+      state.exams = data.exams || [];
+      state.folders = data.folders || [];
+      usersDB = data.users || usersDB;
+      state.database = data.database || {};
+      state.accessKeys = data.accessKeys || {};
+      if (data.branding) Object.assign(branding, data.branding);
+      
+      saveExams(); saveFolders(); saveUsersDB(); saveLS(LS.database, state.database); saveLS(LS.accessKeys, state.accessKeys); saveBrand();
+      
+      invalidateRoomIndex(); invalidateConflictCache();
+      
+      const myNewData = usersDB.find(u => u.username === currentUser.username);
+      if (myNewData) {
+        currentUser = myNewData;
+        applyRightsToUI();
+      }
+      
+      renderEditor(); renderPreview(); updateBranding();
+      toast('Full portal restored successfully ✓', 'success');
+    } catch (err) { console.error(err); toast('Failed to parse backup file.', 'error'); }
+  };
+  reader.readAsText(file);
+}
+
+/* ═══════════════ EVENT LISTENERS ═══════════════ */
+const editor = document.getElementById('editor');
+editor.addEventListener('input', e => {
+  const t = e.target;
+  if (t.classList && t.classList.contains('spSearch')) { const examId = t.dataset.examId; _studentPanelSearch[examId] = t.value; const exam = getVisibleExams().find(x => x.id === examId); if (!exam) return; const all = parseStudents(exam.studentsText); const q = t.value.toLowerCase().trim(); const filtered = q ? all.filter(s => s.reg.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)) : all; const list = editor.querySelector(`.spList[data-exam-id="${examId}"]`); const cnt = t.parentNode.querySelector('.mini-cnt'); if (cnt) cnt.textContent = `${filtered.length} / ${all.length}`; if (list) list.innerHTML = filtered.length === 0 ? '<div class="emptySmall">No match.</div>' : filtered.map(s => `<div class="row"><div class="sReg">${esc(s.reg)}</div><div class="sName">${esc(s.name)}</div><button class="sDel" data-del-reg="${esc(s.reg)}" data-exam-id="${esc(examId)}">✕</button></div>`).join(''); return; }
+  if (t.dataset.manualTime) { const exam = getVisibleExams().find(x => x.id === t.dataset.examId); if (!exam) return; exam[t.dataset.manualTime] = parseManualTime(t.value) || ''; invalidateConflictCache(exam.id); saveExams(); scheduleSnapshot(); scheduleRender(); return; }
+  if (t.dataset.b && t.type !== 'checkbox') { if (!hasRight('edit_branding')) return; branding[t.dataset.b] = t.value; saveBrand(); updateBranding(); scheduleRender(); return; }
+  const f = t.dataset.f; if (!f) return;
+  const card = t.closest('.exam'); if (!card) return;
+  const exam = getVisibleExams().find(x => x.id === card.dataset.id); if (!exam) return;
+  const upperFields = ['courseTitle', 'title', 'courseCode', 'regOverride'];
+  if (upperFields.includes(f)) { const up = t.value.toUpperCase(); if (t.value !== up) { const pos = t.selectionStart; t.value = up; try { t.setSelectionRange(pos, pos); } catch (err) {} } }
+  if (f === 'studentsText') { const up = t.value.split('\n').map(line => line.toUpperCase()).join('\n'); if (t.value !== up) { const pos = t.selectionStart; t.value = up; try { t.setSelectionRange(pos, pos); } catch (err) {} } }
+  if (f === 'rowsPerPage') exam.rowsPerPage = Math.max(1, Math.min(40, parseInt(t.value, 10) || DEFAULT_ROWS_PER_PAGE));
+  else if (f === 'extraBlankRows') exam.extraBlankRows = Math.max(0, Math.min(40, parseInt(t.value, 10) || 0));
+  else if (f === 'year') exam.year = t.value;
+  else if (f === 'customRoomMax') { exam.customRoomMax = t.value; invalidateConflictCache(exam.id); }
+  else if (upperFields.includes(f) || f === 'studentsText') exam[f] = t.value.toUpperCase();
+  else exam[f] = t.value;
+  if (f === 'room' || f === 'dateISO' || f === 'title' || f === 'timeStart' || f === 'timeEnd' || f === 'studentsText') invalidateConflictCache(exam.id);
+  if (f === 'room') { const label = t.closest('label'); const old = label.querySelector('.roomInfo'); if (old) old.remove(); const info = roomInfoMarkup(t.value, parseStudents(exam.studentsText).length, exam.id); if (info) t.insertAdjacentHTML('afterend', info); }
+  if (f === 'studentsText') { const roomLabel = card.querySelector('select[data-f="room"]')?.closest('label'); if (roomLabel) { const old = roomLabel.querySelector('.roomInfo'); if (old) old.remove(); const info = roomInfoMarkup(exam.room, parseStudents(exam.studentsText).length, exam.id); const anchor = roomLabel.querySelector('input.roomCustom'); if (info && anchor) anchor.insertAdjacentHTML('afterend', info); } }
+  saveExams(); refreshCardMeta(exam); scheduleSnapshot(); scheduleRender();
+});
+editor.addEventListener('blur', e => { const t = e.target; if (!t || !t.dataset || !t.dataset.manualTime) return; const exam = getVisibleExams().find(x => x.id === t.dataset.examId); if (!exam) return; const parsed = parseManualTime(t.value) || ''; exam[t.dataset.manualTime] = parsed; t.value = parsed ? to12hDisplay(parsed) : ''; invalidateConflictCache(exam.id); saveExams(); scheduleSnapshot(); scheduleRender(); }, true);
+editor.addEventListener('change', e => {
+  const t = e.target;
+  if (t.matches('input[data-chk]')) { const examId = t.dataset.chk; const exam = getVisibleExams().find(x => x.id === examId); if (exam) exam.selected = t.checked; return; }
+  if (t.classList && t.classList.contains('csvInput')) { const file = t.files && t.files[0]; if (!file) return; const card = t.closest('.exam'); if (!card) return; const exam = getVisibleExams().find(x => x.id === card.dataset.id); if (!exam) return; const reader = new FileReader(); reader.onload = () => { snapshot(); exam.studentsText = parseCSV(reader.result).toUpperCase(); invalidateConflictCache(exam.id); saveExams(); renderEditor(); renderPreview(); toast(`Imported ${parseStudents(exam.studentsText).length} students`, 'success'); }; reader.readAsText(file); return; }
+  if (t.classList && t.classList.contains('roomSelect')) { const card = t.closest('.exam'); if (!card) return; const exam = getVisibleExams().find(x => x.id === card.dataset.id); if (!exam) return; const ci = card.querySelector('.roomCustom'); if (t.value === '__custom__') { ci.classList.remove('hidden'); ci.value = ''; exam.room = ''; ci.focus(); } else { ci.classList.add('hidden'); exam.room = t.value; } invalidateRoomIndex(); invalidateConflictCache(); saveExams(); scheduleSnapshot(); renderPreview(); return; }
+  if (t.id === 'instSelect') { if (!hasRight('edit_branding')) return; if (t.value === '__add__') { document.getElementById('newInstRow').classList.remove('hidden'); document.getElementById('newInstInput').focus(); t.value = branding.institution; return; } branding.institution = t.value; saveBrand(); updateBranding(); renderEditor(); renderPreview(); return; }
+  if (t.id === 'logoFile') { if (!hasRight('edit_branding')) return; const file = t.files && t.files[0]; if (!file) return; if (!file.type.startsWith('image/')) { alert('Please choose an image file.'); t.value = ''; return; } if (file.size > 3 * 1024 * 1024) { alert('Logo file is too large (max 3 MB).'); t.value = ''; return; } const reader = new FileReader(); reader.onload = () => { branding.logoDataUrl = reader.result; saveBrand(); updateBranding(); renderEditor(); renderPreview(); toast('Logo uploaded', 'success'); }; reader.readAsDataURL(file); return; }
+});
+editor.addEventListener('click', e => {
+  if (e.target.id === 'resetAccessKeysBtn') {
+    if (confirm('Are you sure you want to delete all parsed Access Keys? This cannot be undone.')) {
+      state.accessKeys = {};
+      saveLS(LS.accessKeys, state.accessKeys);
+      renderEditor();
+      renderPreview();
+      toast('Access Keys reset successfully', 'success');
+    }
+    return;
+  }
+  if (e.target.id === 'cleanupAccessKeysBtn') {
+    const todayStr = new Date().toISOString().slice(0,10);
+    let cleaned = 0;
+    getVisibleExams().forEach(ex => {
+      if (ex.dateISO && ex.dateISO < todayStr) {
+        parseStudents(ex.studentsText).forEach(s => {
+          if (state.accessKeys[s.reg]) { delete state.accessKeys[s.reg]; cleaned++; }
+        });
+      }
+    });
+    if (cleaned > 0) { saveLS(LS.accessKeys, state.accessKeys); renderEditor(); renderPreview(); toast(`Cleaned up ${cleaned} old keys.`, 'success'); }
+    else toast('No old keys found to clean.', 'info');
+    return;
+  }
+  const permBtn = e.target.closest('button[data-act]');
+  if (permBtn) {
+    const act = permBtn.dataset.act;
+    if (act === 'del' && !hasRight('delete_exam')) { toast('⛔ No delete permission.', 'error'); return; }
+    if (act === 'moveFolder' && !hasRight('use_folder_actions')) { toast('⛔ No folder permission.', 'error'); return; }
+    if (act === 'word' && !hasRight('export_word')) { toast('⛔ No export permission.', 'error'); return; }
+  }
+  const permBranding = e.target.closest('button[data-b-act]');
+  if (permBranding && !hasRight('edit_branding')) { toast('⛔ No branding permission.', 'error'); return; }
+  const slotRow = e.target.closest('tr[data-slot]');
+  if (slotRow) { state.activeSlot = slotRow.dataset.slot; renderEditor(); renderPreview(); return; }
+  const vmb = e.target.closest('[data-viewmode]');
+  if (vmb) { state.viewMode = vmb.dataset.viewmode; saveViewMode(); renderEditor(); toast(state.viewMode === 'overview' ? '📊 Overview mode' : '📝 Detailed mode', 'info'); return; }
+  const cc = e.target.closest('.compactCard');
+  if (cc && !e.target.closest('button') && !e.target.closest('input[type="checkbox"]')) { state.viewMode = 'detailed'; saveViewMode(); renderEditor(); const target = document.querySelector(`.exam[data-id="${cc.dataset.compactId}"]`); if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+  const delBtn = e.target.closest('.spList [data-del-reg]');
+  if (delBtn) { const examId = delBtn.dataset.examId; const reg = delBtn.dataset.delReg; const exam = getVisibleExams().find(x => x.id === examId); if (!exam) return; const all = parseStudents(exam.studentsText); const remaining = all.filter(s => s.reg !== reg); snapshot(); exam.studentsText = remaining.map(s => `${s.reg} ${s.name}`).join('\n'); invalidateConflictCache(exam.id); saveExams(); renderEditor(); renderPreview(); toast(`Removed ${reg}`, 'success'); return; }
+  const toggleSearch = e.target.closest('button[data-f-act="toggleStudentSearch"]');
+  if (toggleSearch) { const examId = toggleSearch.dataset.examId; if (_openStudentPanels.has(examId)) _openStudentPanels.delete(examId); else _openStudentPanels.add(examId); renderEditor(); return; }
+  const closeSearch = e.target.closest('button[data-f-act="closeStudentSearch"]');
+  if (closeSearch) { const examId = closeSearch.dataset.examId; _openStudentPanels.delete(examId); delete _studentPanelSearch[examId]; renderEditor(); return; }
+  if (e.target.id === 'downloadTplBtn' || e.target.closest('#downloadTplBtn')) { downloadExamTemplate(); return; }
+  if (e.target.id === 'importExamsBtn' || e.target.closest('#importExamsBtn')) { const fi = document.getElementById('hiddenExamImportInput'); fi.value = ''; fi.click(); return; }
+  const head = e.target.closest('.card-head[data-toggle="branding"]');
+  if (head) { branding.collapsed = !branding.collapsed; renderEditor(); return; }
+  if (e.target.id === 'saveInstBtn') { if (!hasRight('edit_branding')) { toast('⛔ No permission.', 'error'); return; } const inp = document.getElementById('newInstInput'); const name = (inp.value || '').trim(); if (!name) return; if (!branding.customInstitutions.includes(name)) branding.customInstitutions.push(name); branding.institution = name; saveBrand(); updateBranding(); renderEditor(); renderPreview(); return; }
+  if (e.target.id === 'cancelInstBtn') { renderEditor(); return; }
+  const bBtn = e.target.closest('button[data-b-act]');
+  if (bBtn) {
+    const act = bBtn.dataset.bAct;
+    if (act === 'applyUrl') { const inp = editor.querySelector('input[data-b="logoUrl"]'); if (inp) branding.logoUrl = inp.value.trim(); branding.logoDataUrl = ''; saveBrand(); updateBranding(); renderEditor(); renderPreview(); }
+    if (act === 'clearLogo') { if (!confirm('Remove the logo?')) return; branding.logoUrl = ''; branding.logoDataUrl = ''; saveBrand(); updateBranding(); renderEditor(); renderPreview(); }
+    if (act === 'resetAddr') { branding.address = DEFAULT_ADDRESS; saveBrand(); renderEditor(); renderPreview(); }
+    if (act === 'deleteInst') { const cur = branding.institution; if (!cur) return; if (!confirm(`Delete "${cur}"?`)) return; branding.customInstitutions = branding.customInstitutions.filter(n => n !== cur); branding.institution = 'Garden City University'; saveBrand(); updateBranding(); renderEditor(); renderPreview(); }
+    return;
+  }
+  const csvBtn = e.target.closest('button[data-f-act="csv"]');
+  if (csvBtn) { const card = csvBtn.closest('.exam'); const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.csv,.txt'; inp.className = 'csvInput'; card.appendChild(inp); inp.click(); return; }
+  const btn = e.target.closest('button[data-act]');
+  if (!btn) return;
+  const act = btn.dataset.act;
+  if (act === 'moveFolder') { openMoveFolderModal(); return; }
+  if (act === 'add') { snapshot(); state.exams.push(newExam()); invalidateRoomIndex(); invalidateConflictCache(); saveExams(); renderEditor(); renderPreview(); if (state.viewMode === 'detailed') document.getElementById('editor').scrollTop = 0; return; }
+  if (act === 'clear') { if (!confirm('Remove everything and start fresh?')) return; snapshot(); state.exams = state.exams.filter(ex => ex.owner !== currentUser.username); state.exams.push(newExam()); invalidateRoomIndex(); invalidateConflictCache(); sanitizeActiveSlot(); saveExams(); renderEditor(); renderPreview(); return; }
+  if (act === 'autoAssign') {
+    const unassigned = getVisibleExams().filter(ex => !ex.room && ex.dateISO && parseStudents(ex.studentsText).length > 0);
+    if (unassigned.length === 0) { toast('No unassigned exams to auto-assign.', 'info'); return; }
+    let assignedCount = 0;
+    unassigned.forEach(ex => {
+      const studentCount = parseStudents(ex.studentsText).length;
+      const freeRooms = ROOMS.filter(r => {
+        const others = getRoomUsage(r.name, ex.id, ex);
+        return (others.total + studentCount) <= r.max;
+      });
+      if (freeRooms.length > 0) { ex.room = freeRooms[0].name; assignedCount++; }
+    });
+    if (assignedCount > 0) {
+      snapshot(); invalidateRoomIndex(); invalidateConflictCache(); saveExams(); renderEditor(); renderPreview();
+      toast(`Auto-assigned ${assignedCount} room(s)!`, 'success');
+    } else {
+      toast('No suitable rooms found for the unassigned exams.', 'error');
+    }
+    return;
+  }
+  const card = btn.closest('.exam') || btn.closest('.compactCard'); if (!card) return;
+  const examId = card.dataset.id || card.dataset.compactId;
+  const i = state.exams.findIndex(x => x.id === examId); if (i < 0) return;
+  if (act === 'clone') { snapshot(); const clone = JSON.parse(JSON.stringify(state.exams[i])); clone.id = uid(); clone.courseTitle = clone.courseTitle ? clone.courseTitle + ' (COPY)' : 'COPY'; clone.collapsed = false; state.exams.splice(i + 1, 0, clone); invalidateRoomIndex(); invalidateConflictCache(); saveExams(); renderEditor(); renderPreview(); toast('Exam cloned', 'success'); return; }
+  if (act === 'del') { snapshot(); state.exams.splice(i, 1); if (!state.exams.length) state.exams.push(newExam()); invalidateRoomIndex(); invalidateConflictCache(); sanitizeActiveSlot(); saveExams(); renderEditor(); renderPreview(); return; }
+  if (act === 'word') { saveExamWord(state.exams[i]); return; }
+  if (act === 'toggle') { state.exams[i].collapsed = !state.exams[i].collapsed; const bodyEl = card.querySelector('.card-body'); if (state.exams[i].collapsed) { bodyEl.classList.add('hidden'); btn.textContent = '▸'; } else { bodyEl.classList.remove('hidden'); btn.textContent = '▾'; } saveExams(); return; }
+});
+
+document.getElementById('hiddenKeyInput').addEventListener('change', async e => {
+  const files = Array.from(e.target.files); if (files.length === 0) return;
+  let totalLoaded = 0; let keys = { ...state.accessKeys };
+  for (const file of files) {
+    const data = await new Promise(resolve => { const reader = new FileReader(); reader.onload = ev => resolve(new Uint8Array(ev.target.result)); reader.readAsArrayBuffer(file); });
+    try {
+      const workbook = XLSX.read(data, {type: 'array'});
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+      let regIdx = 2, startIdx = 3, endIdx = 4, keyIdx = 5;
+      if (json.length > 0) { const headers = json[0].map(h => String(h).toLowerCase().trim()); const findHeader = (keywords) => { for (let k of keywords) { const idx = headers.findIndex(h => h.includes(k)); if (idx !== -1) return idx; } return -1; }; const r = findHeader(['user code','login id','registration','reg no']); const s = findHeader(['start date','start']); const en = findHeader(['end date','end']); const k = findHeader(['access key','key']); if (r !== -1) regIdx = r; if (s !== -1) startIdx = s; if (en !== -1) endIdx = en; if (k !== -1) keyIdx = k; }
+      let rowStart = (json.length > 0 && (json[0].join(' ').toLowerCase().includes('user code') || json[0].join(' ').toLowerCase().includes('login'))) ? 1 : 0;
+      for (let i = rowStart; i < json.length; i++) { const row = json[i]; if (!row || row.length === 0) continue; let reg = String(row[regIdx] || '').trim().toUpperCase(); let start = String(row[startIdx] || '').trim(); let end = String(row[endIdx] || '').trim(); let key = String(row[keyIdx] || '').trim(); if (/\s/.test(reg) && !/\s/.test(start) && start && !/^\d/.test(start)) { const tmp = reg; reg = start.toUpperCase(); start = tmp; } if (reg && key && !reg.toLowerCase().includes('code') && !reg.toLowerCase().includes('login')) { keys[reg] = { start, end, key }; totalLoaded++; } }
+    } catch (err) { console.error("Error parsing file:", file.name, err); }
+  }
+  state.accessKeys = keys; saveLS(LS.accessKeys, state.accessKeys); renderEditor(); renderPreview(); toast(`Loaded ${totalLoaded} Access Keys`, 'success');
+});
+document.getElementById('hiddenDbInput').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => { const res = processStudentDatabase(ev.target.result); state.database = res.db; saveLS(LS.database, state.database); renderEditor(); toast(`Loaded ${res.total} students`, 'success'); };
+  reader.readAsText(file);
+});
+document.getElementById('hiddenFolderRestoreInput').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) msRestoreFolderFromFile(f); e.target.value = ''; });
+document.getElementById('hiddenBackupInput').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) restoreAllData(f); e.target.value = ''; });
+
+function processStudentDatabase(csvText) {
+  const lines = csvText.split('\n').filter(l => l.trim()); const db = {}; let total = 0;
+  lines.forEach(line => { const parts = line.split(','); if (parts.length < 2) return; const reg = parts[0].trim().toUpperCase(); const name = parts[1].trim().toUpperCase(); if (!reg || reg.toLowerCase().includes('reg')) return; const match = reg.match(/^(\d{2})([A-Z]+)/); if (match) { const batch = match[1]; const program = match[2]; if (!db[batch]) db[batch] = {}; if (!db[batch][program]) db[batch][program] = []; db[batch][program].push({ reg, name }); total++; } });
+  return { db, total };
+}
+
+let dragSrcId = null;
+editor.addEventListener('dragstart', e => { const handle = e.target.closest('.dragHandle'); if (!handle) return; const card = handle.closest('.exam'); if (!card) return; dragSrcId = card.dataset.id; card.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+editor.addEventListener('dragend', () => { document.querySelectorAll('.exam').forEach(c => c.classList.remove('dragging','dropTarget')); dragSrcId = null; });
+editor.addEventListener('dragover', e => { const card = e.target.closest('.exam'); if (!card || !dragSrcId || card.dataset.id === dragSrcId) return; e.preventDefault(); document.querySelectorAll('.exam').forEach(c => c.classList.remove('dropTarget')); card.classList.add('dropTarget'); });
+editor.addEventListener('drop', e => { const card = e.target.closest('.exam'); if (!card || !dragSrcId) return; e.preventDefault(); const s = state.exams.findIndex(x => x.id === dragSrcId); const d = state.exams.findIndex(x => x.id === card.dataset.id); if (s < 0 || d < 0 || s === d) return; snapshot(); const [m] = state.exams.splice(s, 1); state.exams.splice(d, 0, m); invalidateRoomIndex(); invalidateConflictCache(); saveExams(); renderEditor(); renderPreview(); toast('Reordered', 'success'); });
+function parseCSV(text) { const lines = String(text).replace(/^\ufeff/, '').replace(/\r\n?/g, '\n').split('\n').filter(l => l.trim()); const out = []; let headerSkipped = false; for (const line of lines) { if (!headerSkipped && /reg|roll|name/i.test(line) && /,/.test(line)) { headerSkipped = true; continue; } headerSkipped = true; const parts = line.includes(',') ? line.split(',') : line.split(/\t|\s{2,}/); let reg = (parts[0] || '').trim().replace(/^"|"$/g, ''); let name = (parts[1] || '').trim().replace(/^"|"$/g, ''); if (/[A-Za-z]/.test(reg) && /\d/.test(name) && !/\d/.test(reg)) { const tmp = reg; reg = name; name = tmp; } if (reg && name) out.push(`${reg.toUpperCase()} ${name.toUpperCase()}`); else if (reg) out.push(reg.toUpperCase()); } return out.join('\n'); }
+
+const printMenuBtn = document.getElementById('printMenuBtn');
+const printMenu = document.getElementById('printMenu');
+function closeAllMenus() { printMenu.classList.add('hidden'); }
+printMenuBtn.addEventListener('click', e => { e.stopPropagation(); printMenu.classList.toggle('hidden'); });
+document.addEventListener('click', e => { if (!e.target.closest('.menuWrap')) closeAllMenus(); });
+printMenu.addEventListener('click', e => {
+  const mi = e.target.closest('.mi'); if (!mi) return;
+  closeAllMenus();
+  const act = mi.dataset.act;
+  if (act === 'backupAll') { exportAllData(); return; }
+  if (act === 'restoreAll') { document.getElementById('hiddenBackupInput').click(); return; }
+  if (act === 'printAll' && !hasRight('print_all')) { toast('⛔ No print-all permission.', 'error'); return; }
+  if (act === 'exportWord' && !hasRight('export_word')) { toast('⛔ No export permission.', 'error'); return; }
+  if (act === 'exportWord') { exportToWord([state.view], state.lettersOn); return; }
+  const buildAndPrint = (views, withLetters) => {
+    const filteredExams = getFilteredExams();
+    const preview = document.getElementById('preview');
+    let html = '';
+    if (views.includes('diary')) html += buildDiaryPages(filteredExams, withLetters).html;
+    if (views.includes('absentees')) html += buildAbsenteesPages(filteredExams, withLetters).html;
+    if (views.includes('roomAllotment')) html += buildRoomAllotmentPages(filteredExams, withLetters).html;
+    if (views.includes('accessKeys')) html += buildAccessKeyPages(filteredExams, withLetters).html;
+    preview.innerHTML = html || '<div class="empty">Nothing to print.</div>';
+    const ov = state.view, ol = state.lettersOn;
+    setTimeout(() => { window.print(); setTimeout(() => { state.view = ov; state.lettersOn = ol; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === ov)); renderPreview(); }, 500); }, 50);
+  };
+  if (act === 'printDiary') buildAndPrint(['diary'], true);
+  if (act === 'printAbsentees') buildAndPrint(['absentees'], true);
+  if (act === 'printRoomAllotment') buildAndPrint(['roomAllotment'], true);
+  if (act === 'printAccessKeys') buildAndPrint(['accessKeys'], true);
+  if (act === 'printAll') buildAndPrint(['diary','absentees','roomAllotment','accessKeys'], true);
+  if (act === 'printNoLetterhead') buildAndPrint([state.view], false);
+});
+
+function generateWordHtml(content, isLandscape) {
+  return `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Invigilator Diary</title><style>@page Section1 { size: 8.5in 11.0in; margin: 0.5in; ${isLandscape ? 'mso-page-orientation: landscape; size: 11.0in 8.5in;' : 'mso-page-orientation: portrait;'} } div.Section1 { page: Section1; } body { font-family: 'Times New Roman', serif; font-size: 12pt; } table { border-collapse: collapse; width: 100%; margin-bottom: 20px; } th, td { border: 1px solid black; padding: 4px 6px; text-align: center; vertical-align: middle; font-size: 11pt; } .titleCell { font-weight: bold; font-size: 14pt; } .headRow th { background-color: #e0e0e0; font-weight: bold; } .regCell { text-align: left; } .lblCell { font-weight: bold; text-align: left; } .page { page-break-after: always; } .page:last-child { page-break-after: auto; } .pageHeader { display: none; }</style></head><body><div class=Section1>${content}</div></body></html>`;
+}
+function exportToWord(views, withLetters) {
+  if (!hasRight('export_word')) { toast('⛔ No export permission.', 'error'); return; }
+  const filteredExams = getFilteredExams();
+  let content = '';
+  if (views.includes('diary')) content += buildDiaryPages(filteredExams, withLetters).html;
+  if (views.includes('absentees')) content += buildAbsenteesPages(filteredExams, withLetters).html;
+  if (views.includes('roomAllotment')) content += buildRoomAllotmentPages(filteredExams, withLetters).html;
+  if (views.includes('accessKeys')) content += buildAccessKeyPages(filteredExams, withLetters).html;
+  if (!content) { toast('Nothing to export.', 'error'); return; }
+  const wordHtml = generateWordHtml(content, views.includes('absentees'));
+  const blob = new Blob(['\ufeff', wordHtml], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'Invigilator_Diary_' + new Date().toISOString().slice(0,10) + '.doc';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  toast('Word document downloaded', 'success');
+}
+function saveExamWord(exam) {
+  if (!hasRight('export_word')) { toast('⛔ No export permission.', 'error'); return; }
+  const students = parseStudents(exam.studentsText);
+  if (students.length === 0 && !exam.courseTitle && !exam.title) { toast('No data to save', 'error'); return; }
+  const content = buildDiaryPages([exam], true).html;
+  const wordHtml = generateWordHtml(content, false);
+  const blob = new Blob(['\ufeff', wordHtml], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = (exam.courseTitle || 'exam').replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.doc';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  toast('Word document downloaded', 'success');
+}
+
+document.querySelector('.tabs').addEventListener('click', e => {
+  const tab = e.target.closest('.tab'); if (!tab) return;
+  const view = tab.dataset.view;
+  const rights = getRights(currentUser);
+  const viewRightsMap = { absentees: 'view_absentees', roomAllotment: 'view_room', accessKeys: 'view_accesskeys', database: 'view_database', users: 'manage_users', folders: 'access_master_storage' };
+  if (viewRightsMap[view] && !rights[viewRightsMap[view]]) { toast('⛔ You don\'t have access.', 'error'); return; }
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
+  if (view === 'folders') { openMasterStorage(); return; }
+  state.view = view;
+  renderEditor(); renderPreview();
+});
+document.getElementById('topAdd').addEventListener('click', () => { snapshot(); state.exams.push(newExam()); invalidateRoomIndex(); invalidateConflictCache(); saveExams(); renderEditor(); renderPreview(); });
+document.getElementById('undoBtn').addEventListener('click', undo);
+document.getElementById('hiddenExamImportInput').addEventListener('change', e => { const file = e.target.files && e.target.files[0]; if (file) handleExamImportFile(file); });
+document.addEventListener('keydown', e => {
+  const inField = e.target.matches('input, textarea, select, [contenteditable]');
+  const ctrl = e.ctrlKey || e.metaKey;
+  if (ctrl && e.key.toLowerCase() === 'z' && !inField) { e.preventDefault(); undo(); return; }
+  if (ctrl && e.key.toLowerCase() === 'n') { e.preventDefault(); document.getElementById('topAdd').click(); return; }
+  if (e.key === 'Escape') { closeAllMenus(); closeRoomTransferModal(); document.getElementById('moveFolderModal').classList.add('hidden'); document.getElementById('msBulkBar')?.remove(); }
+});
+
+// Warn on unsaved changes
+window.addEventListener('beforeunload', (e) => {
+  if (state.exams && state.exams.length > 0) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+state.database = loadLS(LS.database, {});
+state.accessKeys = loadLS(LS.accessKeys, {});
+updateBranding();
+populateUserDropdown();
+
+if (safeSession('get') === 'active') {
+  const u = safeSession('get-user') || 'MohanRaj';
+  const found = usersDB.find(x => x.username === u);
+  if (found) { currentUser = found; loginEmail.value = u; enterApp(); }
+  else loginEmail.focus();
+} else {
+  if (usersDB.length) loginEmail.value = usersDB[0].username;
+  loginEmail.focus();
+}
+</script>
+</body>
+</html>
